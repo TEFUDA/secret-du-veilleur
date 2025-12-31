@@ -866,6 +866,106 @@ export default function App() {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* HEADER CTA - CAPTURE EMAIL */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {!isSubmitted && (
+        <div className="header-cta" style={{ 
+          position: 'fixed', 
+          top: 40, 
+          left: 0, 
+          right: 0, 
+          zIndex: 99, 
+          background: 'linear-gradient(to right, rgba(139,0,0,0.9), rgba(0,0,0,0.95), rgba(139,0,0,0.9))',
+          borderBottom: '1px solid rgba(220,38,38,0.3)',
+          padding: '10px 20px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 15,
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>🕷️</span>
+            <span className="header-cta-text" style={{ 
+              fontFamily: 'Share Tech Mono, monospace', 
+              fontSize: 11, 
+              color: '#ccc',
+              letterSpacing: '0.05em'
+            }}>
+              REJOINS L'ENQUÊTE — <span style={{ color: '#dc2626' }}>DOSSIER #7 GRATUIT</span>
+            </span>
+          </div>
+          <form onSubmit={handleSubmit} className="header-form" style={{ display: 'flex', gap: 8 }}>
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="Ton email..." 
+              required 
+              style={{ 
+                padding: '8px 12px', 
+                fontFamily: 'Share Tech Mono, monospace', 
+                fontSize: 11, 
+                background: 'rgba(0,0,0,0.6)', 
+                color: '#fff', 
+                border: '1px solid #333',
+                borderRadius: 0,
+                width: 180,
+                outline: 'none'
+              }} 
+            />
+            <button 
+              type="submit"
+              disabled={isLoading}
+              style={{ 
+                padding: '8px 16px', 
+                fontFamily: 'Share Tech Mono, monospace', 
+                fontSize: 10, 
+                fontWeight: 600, 
+                letterSpacing: '0.1em', 
+                background: isLoading ? '#333' : '#dc2626', 
+                color: '#fff', 
+                border: 'none', 
+                cursor: isLoading ? 'wait' : 'pointer',
+                transition: 'all 0.3s',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {isLoading ? '...' : 'REJOINDRE'}
+            </button>
+          </form>
+        </div>
+      )}
+      
+      {/* Header CTA - Message de confirmation */}
+      {isSubmitted && (
+        <div className="header-cta" style={{ 
+          position: 'fixed', 
+          top: 40, 
+          left: 0, 
+          right: 0, 
+          zIndex: 99, 
+          background: 'linear-gradient(to right, rgba(0,80,0,0.9), rgba(0,0,0,0.95), rgba(0,80,0,0.9))',
+          borderBottom: '1px solid rgba(34,197,94,0.3)',
+          padding: '10px 20px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 10
+        }}>
+          <span style={{ color: '#22c55e', fontSize: 14 }}>✓</span>
+          <span style={{ 
+            fontFamily: 'Share Tech Mono, monospace', 
+            fontSize: 11, 
+            color: '#22c55e',
+            letterSpacing: '0.05em'
+          }}>
+            BIENVENUE, ENQUÊTEUR — LE DOSSIER #7 ARRIVE BIENTÔT
+          </span>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════ */}
       {/* IDLE MESSAGE */}
       {/* ════════════════════════════════════════════════════════════════════ */}
       {idleMessage && (
@@ -2249,6 +2349,49 @@ export default function App() {
         @media (max-width: 768px) {
           p, span, div {
             -webkit-text-size-adjust: 100%;
+          }
+          
+          /* Header CTA responsive */
+          .header-cta {
+            top: 32px !important;
+            padding: 8px 10px !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
+          
+          .header-cta-text {
+            font-size: 9px !important;
+            text-align: center;
+          }
+          
+          .header-form {
+            width: 100%;
+            justify-content: center;
+          }
+          
+          .header-form input {
+            width: 140px !important;
+            padding: 6px 10px !important;
+            font-size: 10px !important;
+          }
+          
+          .header-form button {
+            padding: 6px 12px !important;
+            font-size: 9px !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .header-cta {
+            top: 28px !important;
+          }
+          
+          .header-cta-text {
+            font-size: 8px !important;
+          }
+          
+          .header-form input {
+            width: 120px !important;
           }
         }
       `}</style>
