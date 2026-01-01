@@ -33,7 +33,7 @@ async function sendConfirmationEmail(customer) {
           CODE_POSTAL: customer.postalCode,
           PAYS: customer.country
         },
-        listIds: [3],
+        listIds: [6],
         updateEnabled: true
       })
     });
@@ -48,8 +48,8 @@ async function sendConfirmationEmail(customer) {
       },
       body: JSON.stringify({
         sender: {
-          name: 'Mind Games',
-          email: 'noreply@secrets-du-veilleur.fr'
+          name: 'Le Veilleur',
+          email: 'jevousvois@secrets-du-veilleur.fr'
         },
         to: [{ email: customer.email, name: `${customer.firstName} ${customer.lastName}` }],
         subject: '✅ Confirmation de ta précommande — Mind Games',
