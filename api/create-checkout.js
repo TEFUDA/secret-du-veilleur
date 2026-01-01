@@ -1,25 +1,25 @@
 // /api/create-checkout.js
 // API pour créer une session de paiement Stripe
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const Stripe = require('stripe');
 
 // Configuration des produits
 const PRODUCTS = {
   ebook: {
     name: 'Mind Games — La Toile Mortelle (Ebook)',
     description: 'Roman complet ePub + PDF + Dossier #7 + Chapitre 0',
-    price: 499, // en centimes
+    price: 499,
     shipping: false
   },
   paperback: {
     name: 'Mind Games — La Toile Mortelle (Broché + Ebook)',
     description: 'Livre papier + ePub + PDF + Dossier #7 + Chapitre 0',
-    price: 999, // en centimes
+    price: 999,
     shipping: true
   }
 };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -33,7 +33,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
   
+  // Vérifier que la clé Stripe est configurée
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error('STRIPE_SECRET_KEY non configurée');
+    return res.status(500).json({ error: 'Configuration Stripe manquante' });
+  }
+  
+  // Initialiser Stripe
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  
   try {
+    const body = req.body || {};
     const { 
       format, 
       firstName, 
@@ -43,15 +53,19 @@ export default async function handler(req, res) {
       city, 
       postalCode, 
       country 
-    } = req.body;
+    } = body;
+    
+    console.log('Commande reçue:', { format, firstName, lastName, email });
     
     // Validation
     if (!format || !firstName || !lastName || !email) {
+      console.error('Champs manquants:', { format, firstName, lastName, email });
       return res.status(400).json({ error: 'Informations manquantes' });
     }
     
     const product = PRODUCTS[format];
     if (!product) {
+      console.error('Format invalide:', format);
       return res.status(400).json({ error: 'Format invalide' });
     }
     
@@ -60,7 +74,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Adresse de livraison requise pour le livre broché' });
     }
     
-    // Préparer les métadonnées pour retrouver la commande après
+    // Préparer les métadonnées
     const metadata = {
       format,
       firstName,
@@ -73,12 +87,15 @@ export default async function handler(req, res) {
       orderDate: new Date().toISOString()
     };
     
+    // URL de base
+    const baseUrl = process.env.SITE_URL || 'https://secrets-du-veilleur.fr';
+    
     // Créer la session Stripe Checkout
     const sessionConfig = {
       payment_method_types: ['card'],
       mode: 'payment',
       customer_email: email,
-      locale: 'fr', // Interface en français !
+      locale: 'fr',
       line_items: [
         {
           price_data: {
@@ -86,7 +103,6 @@ export default async function handler(req, res) {
             product_data: {
               name: product.name,
               description: product.description,
-              images: ['https://secret-du-veilleur.fr/cover-mind-games.jpg'], // Ajouter une image de couverture
             },
             unit_amount: product.price,
           },
@@ -94,8 +110,8 @@ export default async function handler(req, res) {
         },
       ],
       metadata,
-      success_url: `${process.env.SITE_URL || 'https://secret-du-veilleur.fr'}/commander.html?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.SITE_URL || 'https://secret-du-veilleur.fr'}/commander.html?canceled=true`,
+      success_url: `${baseUrl}/commander.html?success=true`,
+      cancel_url: `${baseUrl}/commander.html?canceled=true`,
     };
     
     // Ajouter la collecte d'adresse si livre papier
@@ -105,16 +121,19 @@ export default async function handler(req, res) {
       };
     }
     
+    console.log('Création session Stripe...');
     const session = await stripe.checkout.sessions.create(sessionConfig);
+    console.log('Session créée:', session.id);
     
     // Retourner l'URL de paiement
     return res.status(200).json({ url: session.url });
     
   } catch (error) {
-    console.error('Stripe error:', error);
+    console.error('Erreur Stripe:', error.message);
+    console.error('Stack:', error.stack);
     return res.status(500).json({ 
       error: 'Erreur lors de la création du paiement',
-      details: error.message 
+      message: error.message
     });
   }
-}
+};
