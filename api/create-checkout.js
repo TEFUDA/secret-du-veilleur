@@ -8,13 +8,13 @@ const PRODUCTS = {
   ebook: {
     name: 'Mind Games — La Toile Mortelle (Ebook)',
     description: 'Roman complet ePub + PDF + Dossier #7 + Chapitre 0',
-    price: 999, // en centimes
+    price: 499, // en centimes
     shipping: false
   },
   paperback: {
     name: 'Mind Games — La Toile Mortelle (Broché + Ebook)',
     description: 'Livre papier + ePub + PDF + Dossier #7 + Chapitre 0',
-    price: 1999, // en centimes
+    price: 999, // en centimes
     shipping: true
   }
 };

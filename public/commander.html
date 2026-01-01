@@ -497,8 +497,8 @@
         </ul>
         
         <div class="price-box">
-          <span class="price-old">14,99 €</span>
-          <span class="price-new" id="display-price">9,99 €</span>
+          <span class="price-old">9,99 €</span>
+          <span class="price-new" id="display-price">4,99 €</span>
           <span class="price-note">Prix early bird • Offre limitée</span>
         </div>
         
@@ -520,19 +520,19 @@
         <div class="section-title">CHOISIR LE FORMAT</div>
         
         <div class="format-options">
-          <label class="format-option selected" data-format="ebook" data-price="999">
+          <label class="format-option selected" data-format="ebook" data-price="499">
             <input type="radio" name="format" value="ebook" checked>
             <div class="format-icon">📱</div>
             <div class="format-name">Ebook</div>
-            <div class="format-price">9,99 €</div>
+            <div class="format-price">4,99 €</div>
             <div class="format-desc">ePub + PDF</div>
           </label>
           
-          <label class="format-option" data-format="paperback" data-price="1999">
+          <label class="format-option" data-format="paperback" data-price="999">
             <input type="radio" name="format" value="paperback">
             <div class="format-icon">📚</div>
             <div class="format-name">Broché</div>
-            <div class="format-price">19,99 €</div>
+            <div class="format-price">9,99 €</div>
             <div class="format-desc">Livre papier + Ebook</div>
           </label>
         </div>
@@ -598,7 +598,7 @@
         
         <!-- SUBMIT -->
         <button type="submit" class="submit-btn" id="submit-btn">
-          <span class="btn-text">🔒 Payer <span id="btn-price">9,99 €</span></span>
+          <span class="btn-text">🔒 Payer <span id="btn-price">4,99 €</span></span>
           <span class="spinner"></span>
         </button>
         
@@ -638,8 +638,8 @@
   <script>
     // Configuration
     const PRICES = {
-      ebook: { amount: 999, display: '9,99 €' },
-      paperback: { amount: 1999, display: '19,99 €' }
+      ebook: { amount: 499, display: '4,99 €' },
+      paperback: { amount: 999, display: '9,99 €' }
     };
     
     let selectedFormat = 'ebook';

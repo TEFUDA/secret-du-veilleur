@@ -81,7 +81,7 @@ async function sendConfirmationEmail(customer) {
         </tr>
         <tr>
           <td style="padding: 10px 0;">Total</td>
-          <td style="padding: 10px 0; text-align: right; color: #ffd700; font-size: 18px;">${customer.format === 'paperback' ? '19,99 €' : '9,99 €'}</td>
+          <td style="padding: 10px 0; text-align: right; color: #ffd700; font-size: 18px;">${customer.format === 'paperback' ? '4,99 €' : '4,99 €'}</td>
         </tr>
       </table>
     </div>
