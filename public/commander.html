@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Précommander Mind Games — La Toile Mortelle</title>
+  <meta name="description" content="Précommandez Mind Games - La Toile Mortelle. Paiement sécurisé. Livraison dès la sortie.">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background: #0a0a0a;
+      color: #d4d4d4;
+      font-family: 'Crimson Text', Georgia, serif;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+    
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+    }
+    
+    /* LEFT SIDE - PRODUCT */
+    .product-section {
+      position: sticky;
+      top: 40px;
+    }
+    
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #666;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 30px;
+      transition: color 0.3s;
+    }
+    
+    .back-link:hover {
+      color: #dc143c;
+    }
+    
+    .product-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 30px;
+    }
+    
+    .product-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      padding: 5px 15px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    
+    .product-title {
+      font-family: 'Cinzel', serif;
+      font-size: 28px;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+    
+    .product-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      color: #dc143c;
+      letter-spacing: 0.2em;
+      margin-bottom: 20px;
+    }
+    
+    .product-description {
+      color: #888;
+      font-size: 15px;
+      margin-bottom: 25px;
+      line-height: 1.8;
+    }
+    
+    .product-features {
+      list-style: none;
+      margin-bottom: 30px;
+    }
+    
+    .product-features li {
+      padding: 8px 0;
+      border-bottom: 1px solid #222;
+      font-size: 14px;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .product-features li:last-child {
+      border-bottom: none;
+    }
+    
+    .feature-icon {
+      color: #22c55e;
+    }
+    
+    .price-box {
+      background: linear-gradient(135deg, rgba(220,20,60,0.1), rgba(139,0,0,0.1));
+      border: 1px solid rgba(220,20,60,0.3);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .price-old {
+      font-size: 16px;
+      color: #666;
+      text-decoration: line-through;
+    }
+    
+    .price-new {
+      font-family: 'Cinzel', serif;
+      font-size: 42px;
+      color: #ffd700;
+      display: block;
+      margin: 5px 0;
+    }
+    
+    .price-note {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #888;
+    }
+    
+    .secure-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #666;
+    }
+    
+    /* RIGHT SIDE - FORM */
+    .checkout-section h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      color: #fff;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    @media (max-width: 500px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    label {
+      display: block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #888;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    
+    input, select {
+      width: 100%;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 14px 16px;
+      font-family: 'Crimson Text', serif;
+      font-size: 16px;
+      color: #fff;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #dc143c;
+      box-shadow: 0 0 0 3px rgba(220,20,60,0.1);
+    }
+    
+    input::placeholder {
+      color: #555;
+    }
+    
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+    }
+    
+    .section-divider {
+      border: none;
+      border-top: 1px solid #222;
+      margin: 30px 0;
+    }
+    
+    .section-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: #666;
+      letter-spacing: 0.15em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #333;
+    }
+    
+    /* Format selector */
+    .format-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .format-option {
+      background: #111;
+      border: 2px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+    
+    .format-option:hover {
+      border-color: #555;
+    }
+    
+    .format-option.selected {
+      border-color: #dc143c;
+      background: rgba(220,20,60,0.1);
+    }
+    
+    .format-option input {
+      display: none;
+    }
+    
+    .format-icon {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+    
+    .format-name {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+    
+    .format-price {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: #ffd700;
+    }
+    
+    .format-desc {
+      font-size: 11px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    /* Submit button */
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #dc143c, #8b0000);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 18px;
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 30px;
+    }
+    
+    .submit-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #ff2d55, #dc143c);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(220,20,60,0.3);
+    }
+    
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .submit-btn .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    
+    .submit-btn.loading .spinner {
+      display: block;
+    }
+    
+    .submit-btn.loading .btn-text {
+      display: none;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .form-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #666;
+    }
+    
+    .form-footer a {
+      color: #888;
+    }
+    
+    /* Error message */
+    .error-message {
+      background: rgba(220,20,60,0.1);
+      border: 1px solid #dc143c;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #ff6b6b;
+      display: none;
+    }
+    
+    .error-message.show {
+      display: block;
+    }
+    
+    /* Success page */
+    .success-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .success-content {
+      max-width: 500px;
+    }
+    
+    .success-icon {
+      font-size: 80px;
+      margin-bottom: 30px;
+    }
+    
+    .success-title {
+      font-family: 'Cinzel', serif;
+      font-size: 32px;
+      color: #22c55e;
+      margin-bottom: 20px;
+    }
+    
+    .success-message {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+    
+    .success-details {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 25px;
+      text-align: left;
+      margin-bottom: 30px;
+    }
+    
+    .success-details h3 {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 15px;
+      letter-spacing: 0.1em;
+    }
+    
+    .success-details ul {
+      list-style: none;
+    }
+    
+    .success-details li {
+      padding: 8px 0;
+      font-size: 14px;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .back-home {
+      display: inline-block;
+      background: #222;
+      color: #fff;
+      padding: 15px 40px;
+      text-decoration: none;
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+    
+    .back-home:hover {
+      background: #333;
+    }
+    
+    /* Hide sections */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- CHECKOUT FORM -->
+  <div id="checkout-page" class="container">
+    
+    <!-- LEFT - PRODUCT INFO -->
+    <div class="product-section">
+      <a href="/" class="back-link">← Retour au site</a>
+      
+      <div class="product-card">
+        <div class="product-badge">🔥 PRÉVENTE EXCLUSIVE</div>
+        <h1 class="product-title">MIND GAMES</h1>
+        <p class="product-subtitle">LA TOILE MORTELLE</p>
+        
+        <p class="product-description">
+          Un thriller psychologique haletant. 70 chapitres. 178 ans de secrets. 
+          Une vérité qui changera tout.
+        </p>
+        
+        <ul class="product-features">
+          <li><span class="feature-icon">✓</span> Roman complet — 70 chapitres</li>
+          <li><span class="feature-icon">✓</span> Format numérique (ePub + PDF)</li>
+          <li><span class="feature-icon">✓</span> Dossier #7 exclusif inclus</li>
+          <li><span class="feature-icon">✓</span> Chapitre 0 — La Nuit du Pacte</li>
+          <li><span class="feature-icon">✓</span> Livraison prioritaire dès la sortie</li>
+        </ul>
+        
+        <div class="price-box">
+          <span class="price-old">14,99 €</span>
+          <span class="price-new" id="display-price">9,99 €</span>
+          <span class="price-note">Prix early bird • Offre limitée</span>
+        </div>
+        
+        <div class="secure-badge">
+          🔒 Paiement 100% sécurisé par Stripe
+        </div>
+      </div>
+    </div>
+    
+    <!-- RIGHT - CHECKOUT FORM -->
+    <div class="checkout-section">
+      <h2>📖 Finaliser ma précommande</h2>
+      
+      <div id="error-message" class="error-message"></div>
+      
+      <form id="checkout-form">
+        
+        <!-- FORMAT SELECTION -->
+        <div class="section-title">CHOISIR LE FORMAT</div>
+        
+        <div class="format-options">
+          <label class="format-option selected" data-format="ebook" data-price="999">
+            <input type="radio" name="format" value="ebook" checked>
+            <div class="format-icon">📱</div>
+            <div class="format-name">Ebook</div>
+            <div class="format-price">9,99 €</div>
+            <div class="format-desc">ePub + PDF</div>
+          </label>
+          
+          <label class="format-option" data-format="paperback" data-price="1999">
+            <input type="radio" name="format" value="paperback">
+            <div class="format-icon">📚</div>
+            <div class="format-name">Broché</div>
+            <div class="format-price">19,99 €</div>
+            <div class="format-desc">Livre papier + Ebook</div>
+          </label>
+        </div>
+        
+        <!-- PERSONAL INFO -->
+        <div class="section-title">INFORMATIONS PERSONNELLES</div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">Prénom *</label>
+            <input type="text" id="firstName" name="firstName" placeholder="Jean" required>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Nom *</label>
+            <input type="text" id="lastName" name="lastName" placeholder="Dupont" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Adresse email *</label>
+          <input type="email" id="email" name="email" placeholder="jean.dupont@email.com" required>
+        </div>
+        
+        <!-- SHIPPING (shown for paperback) -->
+        <div id="shipping-section">
+          <div class="section-title">ADRESSE DE LIVRAISON</div>
+          
+          <div class="form-group">
+            <label for="address">Adresse *</label>
+            <input type="text" id="address" name="address" placeholder="123 Rue de la Paix">
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city">Ville *</label>
+              <input type="text" id="city" name="city" placeholder="Paris">
+            </div>
+            <div class="form-group">
+              <label for="postalCode">Code postal *</label>
+              <input type="text" id="postalCode" name="postalCode" placeholder="75001">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="country">Pays *</label>
+            <select id="country" name="country">
+              <option value="FR" selected>France</option>
+              <option value="BE">Belgique</option>
+              <option value="CH">Suisse</option>
+              <option value="CA">Canada</option>
+              <option value="LU">Luxembourg</option>
+              <option value="MC">Monaco</option>
+              <option value="CI">Côte d'Ivoire</option>
+              <option value="SN">Sénégal</option>
+              <option value="MA">Maroc</option>
+              <option value="TN">Tunisie</option>
+              <option value="OTHER">Autre pays</option>
+            </select>
+          </div>
+        </div>
+        
+        <hr class="section-divider">
+        
+        <!-- SUBMIT -->
+        <button type="submit" class="submit-btn" id="submit-btn">
+          <span class="btn-text">🔒 Payer <span id="btn-price">9,99 €</span></span>
+          <span class="spinner"></span>
+        </button>
+        
+        <p class="form-footer">
+          En commandant, tu acceptes nos <a href="#">conditions de vente</a>.<br>
+          Satisfait ou remboursé sous 30 jours.
+        </p>
+        
+      </form>
+    </div>
+  </div>
+
+  <!-- SUCCESS PAGE -->
+  <div id="success-page" class="success-container hidden">
+    <div class="success-content">
+      <div class="success-icon">🎉</div>
+      <h1 class="success-title">Merci pour ta commande !</h1>
+      <p class="success-message">
+        Ta précommande de <strong>Mind Games — La Toile Mortelle</strong> a été enregistrée avec succès.<br><br>
+        Tu recevras un email de confirmation à l'adresse indiquée.
+      </p>
+      
+      <div class="success-details">
+        <h3>CE QUI VA SE PASSER :</h3>
+        <ul>
+          <li>📧 Email de confirmation dans quelques minutes</li>
+          <li>📁 Accès immédiat au Dossier #7 et Chapitre 0</li>
+          <li>📖 Livre envoyé dès sa sortie officielle</li>
+          <li>🎁 Contenu bonus exclusif réservé aux early birds</li>
+        </ul>
+      </div>
+      
+      <a href="/" class="back-home">← Retour au site</a>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const PRICES = {
+      ebook: { amount: 999, display: '9,99 €' },
+      paperback: { amount: 1999, display: '19,99 €' }
+    };
+    
+    let selectedFormat = 'ebook';
+    
+    // Format selection
+    document.querySelectorAll('.format-option').forEach(option => {
+      option.addEventListener('click', () => {
+        // Update UI
+        document.querySelectorAll('.format-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        
+        // Update selected format
+        selectedFormat = option.dataset.format;
+        const price = PRICES[selectedFormat];
+        
+        // Update prices displayed
+        document.getElementById('display-price').textContent = price.display;
+        document.getElementById('btn-price').textContent = price.display;
+        
+        // Show/hide shipping for paperback
+        const shippingSection = document.getElementById('shipping-section');
+        if (selectedFormat === 'paperback') {
+          shippingSection.style.display = 'block';
+          shippingSection.querySelectorAll('input').forEach(i => i.required = true);
+        } else {
+          shippingSection.style.display = 'none';
+          shippingSection.querySelectorAll('input').forEach(i => i.required = false);
+        }
+      });
+    });
+    
+    // Initially hide shipping for ebook
+    document.getElementById('shipping-section').style.display = 'none';
+    
+    // Form submission
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submit-btn');
+      const errorMessage = document.getElementById('error-message');
+      
+      // Show loading
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+      errorMessage.classList.remove('show');
+      
+      // Collect form data
+      const formData = {
+        format: selectedFormat,
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        address: document.getElementById('address').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        postalCode: document.getElementById('postalCode').value.trim(),
+        country: document.getElementById('country').value,
+        amount: PRICES[selectedFormat].amount
+      };
+      
+      try {
+        // Call our API to create Stripe checkout session
+        const response = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.url) {
+          // Redirect to Stripe Checkout
+          window.location.href = data.url;
+        } else if (data.error) {
+          throw new Error(data.error);
+        }
+        
+      } catch (error) {
+        console.error('Checkout error:', error);
+        errorMessage.textContent = 'Une erreur est survenue. Veuillez réessayer ou nous contacter.';
+        errorMessage.classList.add('show');
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    });
+    
+    // Check for success parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      document.getElementById('checkout-page').classList.add('hidden');
+      document.getElementById('success-page').classList.remove('hidden');
+    }
+  </script>
+
+</body>
+</html>

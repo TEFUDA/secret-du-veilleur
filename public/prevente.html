@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIND GAMES — Prévente Exclusive | Thriller Psychologique</title>
+  <meta name="description" content="Précommandez Mind Games - La Toile Mortelle. Un thriller psychologique haletant. 70 chapitres. 178 ans de secrets. Prix early bird limité.">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background: #0a0a0a;
+      color: #d4d4d4;
+      font-family: 'Crimson Text', Georgia, serif;
+      line-height: 1.8;
+      overflow-x: hidden;
+    }
+    
+    /* HERO SECTION */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 20px;
+      background: linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 50%, #0a0a0a 100%);
+      position: relative;
+    }
+    
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50" font-size="50" opacity="0.02">🕷️</text></svg>');
+      background-size: 100px;
+      pointer-events: none;
+    }
+    
+    .hero-content {
+      max-width: 800px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      padding: 8px 25px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      margin-bottom: 30px;
+      font-weight: bold;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    
+    .title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(40px, 10vw, 72px);
+      color: #fff;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+      text-shadow: 0 0 50px rgba(220,20,60,0.3);
+    }
+    
+    .subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(16px, 4vw, 24px);
+      color: #dc143c;
+      letter-spacing: 0.3em;
+      margin-bottom: 30px;
+    }
+    
+    .tagline {
+      font-size: 20px;
+      color: #888;
+      font-style: italic;
+      margin-bottom: 40px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 50px;
+      flex-wrap: wrap;
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-family: 'Cinzel', serif;
+      font-size: 36px;
+      color: #dc143c;
+      display: block;
+    }
+    
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: #666;
+      letter-spacing: 0.2em;
+    }
+    
+    .cta-box {
+      background: linear-gradient(135deg, rgba(220,20,60,0.2), rgba(139,0,0,0.2));
+      border: 2px solid rgba(220,20,60,0.5);
+      padding: 40px;
+      border-radius: 8px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .price-container {
+      margin-bottom: 25px;
+    }
+    
+    .price-old {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 18px;
+      color: #666;
+      text-decoration: line-through;
+    }
+    
+    .price-new {
+      font-family: 'Cinzel', serif;
+      font-size: 48px;
+      color: #ffd700;
+      display: block;
+      margin: 10px 0;
+    }
+    
+    .price-note {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #888;
+    }
+    
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #dc143c, #8b0000);
+      color: #fff;
+      padding: 20px 60px;
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.3s;
+      box-shadow: 0 10px 40px rgba(220,20,60,0.4);
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      max-width: 350px;
+    }
+    
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 50px rgba(220,20,60,0.5);
+      background: linear-gradient(135deg, #ff2d55, #dc143c);
+    }
+    
+    .guarantee {
+      margin-top: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #666;
+    }
+    
+    /* SECTION COMMUNE */
+    section {
+      padding: 100px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(24px, 5vw, 36px);
+      color: #fff;
+      text-align: center;
+      margin-bottom: 50px;
+      letter-spacing: 0.1em;
+    }
+    
+    /* SYNOPSIS */
+    .synopsis {
+      background: linear-gradient(180deg, transparent, rgba(220,20,60,0.05), transparent);
+    }
+    
+    .synopsis-text {
+      font-size: 18px;
+      color: #aaa;
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .synopsis-text p {
+      margin-bottom: 25px;
+    }
+    
+    .synopsis-highlight {
+      color: #fff;
+      font-weight: 600;
+    }
+    
+    /* EXTRAIT */
+    .extrait {
+      background: #111;
+      border-left: 3px solid #dc143c;
+      padding: 40px;
+      margin: 50px 0;
+      font-style: italic;
+      color: #999;
+      font-size: 17px;
+    }
+    
+    .extrait-source {
+      margin-top: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #dc143c;
+      font-style: normal;
+    }
+    
+    /* CE QUE VOUS ALLEZ DÉCOUVRIR */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-top: 50px;
+    }
+    
+    .feature {
+      background: #111;
+      border: 1px solid #222;
+      padding: 30px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    
+    .feature:hover {
+      border-color: #dc143c;
+      transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+      font-size: 40px;
+      margin-bottom: 15px;
+    }
+    
+    .feature-title {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    
+    .feature-desc {
+      font-size: 14px;
+      color: #888;
+    }
+    
+    /* TÉMOIGNAGES / AVIS BÊTA */
+    .testimonials {
+      background: linear-gradient(180deg, transparent, rgba(255,215,0,0.02), transparent);
+    }
+    
+    .testimonial-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+    
+    .testimonial {
+      background: #111;
+      border: 1px solid #333;
+      padding: 25px;
+      position: relative;
+    }
+    
+    .testimonial::before {
+      content: '"';
+      font-family: 'Cinzel', serif;
+      font-size: 60px;
+      color: #dc143c;
+      opacity: 0.3;
+      position: absolute;
+      top: 10px;
+      left: 15px;
+    }
+    
+    .testimonial-text {
+      font-size: 14px;
+      color: #999;
+      font-style: italic;
+      margin-bottom: 15px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .testimonial-author {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #666;
+    }
+    
+    /* FAQ */
+    .faq-item {
+      border-bottom: 1px solid #222;
+      padding: 25px 0;
+    }
+    
+    .faq-question {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    
+    .faq-answer {
+      font-size: 14px;
+      color: #888;
+    }
+    
+    /* AUTHOR */
+    .author {
+      text-align: center;
+      padding: 60px 20px;
+      background: #111;
+    }
+    
+    .author-name {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    
+    .author-bio {
+      font-size: 14px;
+      color: #888;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    /* FINAL CTA */
+    .final-cta {
+      text-align: center;
+      padding: 100px 20px;
+      background: linear-gradient(180deg, #0a0a0a, #1a0a0a);
+    }
+    
+    .countdown {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      color: #ffd700;
+      margin-bottom: 30px;
+      letter-spacing: 0.1em;
+    }
+    
+    .final-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(28px, 6vw, 42px);
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    
+    .final-subtitle {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 40px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      border-top: 1px solid #222;
+    }
+    
+    footer p {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #444;
+    }
+    
+    /* URGENCE */
+    .urgency-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #dc143c, #8b0000);
+      padding: 15px 20px;
+      text-align: center;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .urgency-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: #fff;
+      letter-spacing: 0.1em;
+    }
+    
+    .urgency-button {
+      background: #fff;
+      color: #8b0000;
+      padding: 10px 30px;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    
+    .urgency-button:hover {
+      background: #ffd700;
+    }
+    
+    /* Padding pour la barre fixe */
+    body {
+      padding-bottom: 70px;
+    }
+    
+    @media (max-width: 600px) {
+      .stats { gap: 20px; }
+      .cta-box { padding: 25px; }
+      .urgency-bar { flex-direction: column; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="badge">🔥 PRÉVENTE EXCLUSIVE — PRIX EARLY BIRD</div>
+      
+      <h1 class="title">MIND GAMES</h1>
+      <p class="subtitle">LA TOILE MORTELLE</p>
+      
+      <p class="tagline">
+        "Certains secrets ne devraient jamais être découverts.<br>
+        Madeleine Bertrand va l'apprendre à ses dépens."
+      </p>
+      
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-number">70</span>
+          <span class="stat-label">CHAPITRES</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">178</span>
+          <span class="stat-label">ANS DE SECRETS</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">7</span>
+          <span class="stat-label">VICTIMES</span>
+        </div>
+      </div>
+      
+      <div class="cta-box">
+        <div class="price-container">
+          <span class="price-old">14,99 €</span>
+          <span class="price-new">9,99 €</span>
+          <span class="price-note">Prix prévente • Livraison incluse</span>
+        </div>
+        <a href="/commander.html" class="cta-button">
+          📖 PRÉCOMMANDER MAINTENANT
+        </a>
+        <p class="guarantee">✓ Paiement sécurisé • ✓ Livraison dès la sortie • ✓ Satisfait ou remboursé</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SYNOPSIS -->
+  <section class="synopsis">
+    <h2>L'HISTOIRE</h2>
+    <div class="synopsis-text">
+      <p>
+        <span class="synopsis-highlight">Ravenwood, Massachusetts. 2026.</span>
+      </p>
+      <p>
+        Quand Madeleine Bertrand reçoit un mystérieux dossier concernant la disparition de son père dix ans plus tôt, elle découvre qu'il n'était pas le seul. <span class="synopsis-highlight">Depuis 1847, des gens disparaissent dans cette ville.</span> Tous les dix ans. Sans exception.
+      </p>
+      <p>
+        En fouillant dans les archives, elle met au jour un secret que trois familles fondatrices protègent depuis près de deux siècles. <span class="synopsis-highlight">Un pacte. Une entité. Un prix à payer.</span>
+      </p>
+      <p>
+        Mais plus elle approche de la vérité, plus elle réalise qu'elle est observée. Suivie. <span class="synopsis-highlight">Choisie.</span>
+      </p>
+      <p style="color: #dc143c; font-size: 20px;">
+        Le Veilleur a trouvé sa prochaine offrande.
+      </p>
+    </div>
+    
+    <div class="extrait">
+      "Je sais que tu lis ces lignes, Madeleine. Je sais que tu cherches des réponses. Mais certaines portes, une fois ouvertes, ne se referment jamais. Ton père l'a appris. Et bientôt, tu l'apprendras aussi."
+      <p class="extrait-source">— Extrait du Chapitre 12</p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section>
+    <h2>CE QUI VOUS ATTEND</h2>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🕷️</div>
+        <div class="feature-title">THRILLER PSYCHOLOGIQUE</div>
+        <div class="feature-desc">Une tension qui monte crescendo jusqu'à un final qui vous hantera</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔮</div>
+        <div class="feature-title">MYSTÈRE SÉCULAIRE</div>
+        <div class="feature-desc">178 ans de secrets, de disparitions et de mensonges à démêler</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">PERSONNAGES COMPLEXES</div>
+        <div class="feature-desc">Des protagonistes ambigus où rien n'est jamais ce qu'il semble</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌀</div>
+        <div class="feature-title">TWISTS INATTENDUS</div>
+        <div class="feature-desc">Des retournements de situation qui remettent tout en question</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📖</div>
+        <div class="feature-title">70 CHAPITRES</div>
+        <div class="feature-desc">Une saga complète de plus de 100 000 mots</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎭</div>
+        <div class="feature-title">LE VEILLEUR</div>
+        <div class="feature-desc">Un antagoniste qui vous fera frissonner longtemps après la dernière page</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TÉMOIGNAGES -->
+  <section class="testimonials">
+    <h2>ILS ONT LU LA VERSION BÊTA</h2>
+    <div class="testimonial-grid">
+      <div class="testimonial">
+        <p class="testimonial-text">J'ai lu les 70 chapitres en 3 jours. Impossible de m'arrêter. Le twist du chapitre 58 m'a littéralement fait lâcher ma liseuse.</p>
+        <p class="testimonial-author">— Sophie M., lectrice bêta</p>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">Ça faisait longtemps qu'un thriller français ne m'avait pas autant captivé. L'ambiance de Ravenwood est oppressante à souhait.</p>
+        <p class="testimonial-author">— Thomas L., lecteur bêta</p>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">Le Veilleur est le méchant le plus flippant que j'ai lu depuis des années. Je vérifie mes fenêtres avant de dormir maintenant.</p>
+        <p class="testimonial-author">— Marine D., lectrice bêta</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section>
+    <h2>QUESTIONS FRÉQUENTES</h2>
+    
+    <div class="faq-item">
+      <p class="faq-question">📚 Quand le livre sera-t-il disponible ?</p>
+      <p class="faq-answer">Le livre sera envoyé dès sa sortie officielle, prévue pour [MOIS 2025]. Les précommandes seront expédiées en priorité.</p>
+    </div>
+    
+    <div class="faq-item">
+      <p class="faq-question">📦 Sous quel format ?</p>
+      <p class="faq-answer">Version numérique (ePub + PDF) envoyée par email. Option livre broché disponible avec supplément frais de port.</p>
+    </div>
+    
+    <div class="faq-item">
+      <p class="faq-question">💰 Pourquoi ce prix réduit ?</p>
+      <p class="faq-answer">C'est un prix early bird exclusif pour remercier les premiers lecteurs qui croient au projet. Le prix passera à 14,99€ au lancement officiel.</p>
+    </div>
+    
+    <div class="faq-item">
+      <p class="faq-question">🔄 Et si je n'aime pas ?</p>
+      <p class="faq-answer">Satisfait ou remboursé sous 30 jours, sans question. Votre satisfaction est ma priorité.</p>
+    </div>
+    
+    <div class="faq-item">
+      <p class="faq-question">🎁 Y a-t-il des bonus ?</p>
+      <p class="faq-answer">Les précommandes incluent l'accès exclusif au Dossier #7 complet et au Chapitre 0 "La Nuit du Pacte" — un contenu qui ne sera pas dans le livre final.</p>
+    </div>
+  </section>
+
+  <!-- AUTHOR -->
+  <section class="author">
+    <p style="font-size: 40px; margin-bottom: 20px;">🖋️</p>
+    <p class="author-name">L'AUTEUR</p>
+    <p class="author-bio">
+      Passionné par les thrillers psychologiques et les mystères qui traversent les générations, Mind Games est le fruit de deux ans d'écriture. Une histoire qui m'obsédait et que je devais raconter. J'espère qu'elle vous hantera autant qu'elle m'a hanté.
+    </p>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final-cta">
+    <p class="countdown">⏳ OFFRE LIMITÉE — PRIX EARLY BIRD</p>
+    <h2 class="final-title">Prêt(e) à découvrir la vérité ?</h2>
+    <p class="final-subtitle">
+      Rejoins les premiers lecteurs et reçois le livre dès sa sortie, au prix le plus bas qu'il n'aura jamais.
+    </p>
+    
+    <div class="cta-box" style="max-width: 450px; margin: 0 auto;">
+      <div class="price-container">
+        <span class="price-old">14,99 €</span>
+        <span class="price-new">9,99 €</span>
+        <span class="price-note">+ Dossier #7 + Chapitre 0 exclusif</span>
+      </div>
+      <a href="/commander.html" class="cta-button">
+        📖 JE PRÉCOMMANDE
+      </a>
+      <p class="guarantee">🔒 Paiement 100% sécurisé par Stripe</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>🕷️ Le Veilleur observe.</p>
+    <p style="margin-top: 15px;">© 2025 Mind Games — Tous droits réservés</p>
+    <p style="margin-top: 10px;">
+      <a href="/" style="color: #666;">Retour au site</a>
+    </p>
+  </footer>
+
+  <!-- BARRE URGENCE FIXE -->
+  <div class="urgency-bar">
+    <span class="urgency-text">🔥 PRÉVENTE : 9,99€ au lieu de 14,99€</span>
+    <a href="/commander.html" class="urgency-button">PRÉCOMMANDER →</a>
+  </div>
+
+</body>
+</html>
