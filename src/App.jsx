@@ -67,6 +67,34 @@ export default function App() {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SYSTÈME ESCAPE GAME 3.0
+  // ═══════════════════════════════════════════════════════════════════════════
+  const [gameLevel, setGameLevel] = useState(0);
+  const [unlockedFeatures, setUnlockedFeatures] = useState(new Set());
+  const [foundClues, setFoundClues] = useState([]);
+  const [compassUnlocked, setCompassUnlocked] = useState(false);
+  const [compassRotation, setCompassRotation] = useState({ x: 0, y: 0 });
+  const [compassHoldTime, setCompassHoldTime] = useState(0);
+  const [compassSecretFound, setCompassSecretFound] = useState(false);
+  const [photoUnlocked, setPhotoUnlocked] = useState(false);
+  const [scratchProgress, setScratchProgress] = useState(0);
+  const [faceRevealed, setFaceRevealed] = useState(false);
+  const [revealedName, setRevealedName] = useState('');
+  const [audioClueUnlocked, setAudioClueUnlocked] = useState(false);
+  const [audioPlayed, setAudioPlayed] = useState(false);
+  const [tunnelsUnlocked, setTunnelsUnlocked] = useState(false);
+  const [tunnelPosition, setTunnelPosition] = useState(0);
+  const [tunnelMessages, setTunnelMessages] = useState([]);
+  const [finalCodeUnlocked, setFinalCodeUnlocked] = useState(false);
+  const [eliteStatus, setEliteStatus] = useState(false);
+  const [showCompass, setShowCompass] = useState(false);
+  const [showPhoto1892, setShowPhoto1892] = useState(false);
+  const [showTunnels, setShowTunnels] = useState(false);
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+  const [escapeGameNotification, setEscapeGameNotification] = useState(null);
+  const compassHoldRef = useRef(null);
+  
   // AUDIO REFS
   const audioContextRef = useRef(null);
   const droneOscRef = useRef(null);
@@ -318,21 +346,165 @@ export default function App() {
     }
   ];
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FONCTIONS ESCAPE GAME 3.0
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Notification de déblocage
+  const showGameNotification = (message, type = 'unlock') => {
+    setEscapeGameNotification({ message, type });
+    setTimeout(() => setEscapeGameNotification(null), 4000);
+  };
+
+  // Débloquer une fonctionnalité
+  const unlockFeature = (feature) => {
+    if (!unlockedFeatures.has(feature)) {
+      setUnlockedFeatures(prev => new Set([...prev, feature]));
+      return true;
+    }
+    return false;
+  };
+
+  // Ajouter un indice
+  const addClue = (clue) => {
+    if (!foundClues.includes(clue)) {
+      setFoundClues(prev => [...prev, clue]);
+      updateGameLevel();
+      return true;
+    }
+    return false;
+  };
+
+  // Mettre à jour le niveau de jeu
+  const updateGameLevel = useCallback(() => {
+    const clueCount = foundClues.length;
+    if (clueCount >= 10 && !eliteStatus) {
+      setGameLevel(5);
+      setEliteStatus(true);
+      showGameNotification('🏆 STATUT ÉLITE DÉBLOQUÉ !', 'elite');
+    } else if (clueCount >= 7) {
+      setGameLevel(4);
+    } else if (clueCount >= 5) {
+      setGameLevel(3);
+    } else if (clueCount >= 3) {
+      setGameLevel(2);
+    } else if (clueCount >= 1) {
+      setGameLevel(1);
+    }
+  }, [foundClues, eliteStatus]);
+
+  // Vérifier orientation boussole pour secret
+  const checkCompassSecret = useCallback((rotation) => {
+    // Sud-Ouest = vers les tunnels (entre 200 et 230 degrés)
+    const angle = ((rotation.y % 360) + 360) % 360;
+    if (angle >= 200 && angle <= 230) {
+      return true;
+    }
+    return false;
+  }, []);
+
+  // Gérer le maintien de la boussole
+  const handleCompassHold = useCallback(() => {
+    if (checkCompassSecret(compassRotation) && !compassSecretFound) {
+      setCompassHoldTime(prev => {
+        const newTime = prev + 100;
+        if (newTime >= 3000) {
+          setCompassSecretFound(true);
+          unlockFeature('CRYPTE7');
+          addClue('COMPASS_SECRET');
+          showGameNotification('🔓 CODE DÉBLOQUÉ: CRYPTE7 — Tapez-le dans le terminal !', 'unlock');
+          return 0;
+        }
+        return newTime;
+      });
+    } else {
+      setCompassHoldTime(0);
+    }
+  }, [compassRotation, compassSecretFound, checkCompassSecret]);
+
+  // Effet pour le hold de la boussole
+  useEffect(() => {
+    if (showCompass && !compassSecretFound) {
+      compassHoldRef.current = setInterval(handleCompassHold, 100);
+      return () => clearInterval(compassHoldRef.current);
+    }
+  }, [showCompass, compassSecretFound, handleCompassHold]);
+
+  // Gratter la photo
+  const handleScratch = (e) => {
+    if (!photoUnlocked || faceRevealed) return;
+    setScratchProgress(prev => {
+      const newProgress = Math.min(100, prev + 2);
+      if (newProgress >= 100 && !faceRevealed) {
+        setFaceRevealed(true);
+        setRevealedName('EZEKIEL');
+        unlockFeature('REVEALED_NAME');
+        addClue('FACE_REVEALED');
+        showGameNotification('👤 VISAGE RÉVÉLÉ: EZEKIEL LEWIS — Tapez son nom dans le terminal !', 'unlock');
+      }
+      return newProgress;
+    });
+  };
+
+  // Explorer les tunnels
+  const exploreTunnel = (direction) => {
+    if (!tunnelsUnlocked) return;
+    
+    const tunnelStory = [
+      { pos: 0, text: "Vous entrez dans les tunnels. L'air est glacial.", direction: 'forward' },
+      { pos: 1, text: "Le passage se rétrécit. Vous entendez un grattement.", direction: 'forward' },
+      { pos: 2, text: "Une bifurcation. À gauche: des marques de griffes. À droite: une lueur.", direction: 'both' },
+      { pos: 3, text: "Vous avancez vers la lueur... C'est une inscription sur le mur.", direction: 'forward' },
+      { pos: 4, text: "'MDCCCXLVII' — Un chiffre romain. 1847.", direction: 'forward' },
+      { pos: 5, text: "Plus loin, une porte. Verrouillée. Un symbole gravé dessus.", direction: 'forward' },
+      { pos: 6, text: "Le symbole forme trois lettres entrelacées: L.M.A.", direction: 'forward' },
+      { pos: 7, text: "Lewis. Morrison. Ashworth. Les trois familles.", direction: 'forward' },
+      { pos: 8, text: "Sous le symbole, un code: 'VERITASNEX'", direction: 'forward' },
+      { pos: 9, text: "Soudain, un souffle dans votre nuque. QUELQUE CHOSE EST LÀ.", direction: 'back' },
+    ];
+    
+    if (direction === 'forward' && tunnelPosition < 9) {
+      const newPos = tunnelPosition + 1;
+      setTunnelPosition(newPos);
+      setTunnelMessages(prev => [...prev, tunnelStory[newPos].text]);
+      
+      if (newPos === 8) {
+        unlockFeature('FINAL_CODE');
+        addClue('TUNNEL_CODE');
+        showGameNotification('🔓 CODE FINAL DÉCOUVERT: VERITASNEX', 'unlock');
+      }
+      if (newPos === 9) {
+        setTimeout(() => {
+          setShowTunnels(false);
+          setFlickerScreen(true);
+          setTimeout(() => setFlickerScreen(false), 500);
+          showGameNotification('💀 VOUS AVEZ ÉTÉ REPÉRÉ. Le Veilleur sait.', 'danger');
+        }, 2000);
+      }
+    } else if (direction === 'back' && tunnelPosition > 0) {
+      setTunnelPosition(prev => prev - 1);
+      setTunnelMessages(prev => prev.slice(0, -1));
+    }
+  };
+
   const terminalCommands = {
     'help': () => [
       '═══════════════════════════════════════',
       'COMMANDES DISPONIBLES:',
       '═══════════════════════════════════════',
-      'HELP     - Affiche cette aide',
-      'STATUS   - État du système',
-      'VICTIMS  - Liste des victimes',
-      'FILES    - Fichiers disponibles',
-      'OPEN [n] - Ouvrir le fichier n',
-      'MAP      - Localisation',
-      'SEARCH   - Rechercher dans la base',
-      'EXIT     - Fermer le terminal',
+      'HELP      - Affiche cette aide',
+      'STATUS    - État du système',
+      'VICTIMS   - Liste des victimes',
+      'FILES     - Fichiers disponibles',
+      'OPEN [n]  - Ouvrir le fichier n',
+      'MAP       - Localisation',
+      'SEARCH    - Rechercher dans la base',
+      'DATE      - Consulter les archives par année',
+      'WHO       - Rechercher une personne',
+      'EXIT      - Fermer le terminal',
       '═══════════════════════════════════════',
-      '[NIVEAU 5 REQUIS POUR PLUS DE COMMANDES]',
+      '💡 Essayez de taper des mots-clés...',
+      '   Certains secrets sont cachés.',
     ],
     'status': () => [
       'SYSTÈME: EN LIGNE',
@@ -340,51 +512,160 @@ export default function App() {
       'DERNIÈRE INTRUSION: IL Y A 3 MIN',
       'FICHIERS CORROMPUS: 23',
       'SURVEILLANCE: ACTIVE',
+      `VISITEUR: ${userCity || 'LOCALISATION EN COURS'}`,
       '⚠️ ATTENTION: ACTIVITÉ ANORMALE DÉTECTÉE',
     ],
     'victims': () => [
       'BASE DE DONNÉES VICTIMES:',
-      '─────────────────────────',
-      '001 - BERTRAND, M. [DISPARUE]',
-      '002 - SANTOS, M. [DÉCÉDÉE]', 
-      '003 - ASHWORTH, T. [INTROUVABLE]',
-      '004 - PRICE, E. [DÉCÉDÉE]',
-      '005 - BERTRAND, V. [DÉCÉDÉ]',
-      '─────────────────────────',
-      'TOTAL: 5 DOSSIERS | 127 NON RÉSOLUS',
+      '─────────────────────────────────────',
+      '001 - MITCHELL, Sarah    [1867] DÉCÉDÉE',
+      '002 - LEWIS, ████████    [1892] DISPARU', 
+      '003 - HOLLOWAY, Margaret [1892] DÉCÉDÉE',
+      '004 - ASHWORTH, Thomas   [1952] INTROUVABLE',
+      '005 - PRICE, Eleanor     [1996] DÉCÉDÉE',
+      '006 - BERTRAND, Victor   [2016] DÉCÉDÉ',
+      '007 - BERTRAND, Madeleine[2026] DISPARUE',
+      '─────────────────────────────────────',
+      'TOTAL: 7 DOSSIERS PRINCIPAUX',
+      'TAPEZ: WHO [nom] pour plus d\'infos',
     ],
     'files': () => [
       'FICHIERS ACCESSIBLES:',
-      '[1] registre_1892.pdf [CORROMPU]',
+      '[1] registre_1892.pdf     [CORROMPU]',
       '[2] rapport_police_1952.doc [PARTIEL]',
-      '[3] autopsie_price.pdf [CLASSIFIÉ]',
-      '[4] notes_bertrand.txt [ACCESSIBLE]',
-      '[5] ████████.███ [ACCÈS REFUSÉ]',
+      '[3] autopsie_price.pdf    [CLASSIFIÉ]',
+      '[4] notes_bertrand.txt    [ACCESSIBLE]',
+      '[5] ████████.███          [ACCÈS REFUSÉ]',
+      '[6] enregistrement_2h13.mp3 [AUDIO]',
+      '[7] dossier_7.pdf         [DÉCLASSIFIÉ]',
+      '',
+      'TAPEZ: OPEN [numéro] pour ouvrir',
     ],
+    'open 1': () => ['ERREUR: Fichier corrompu. 3% récupérable.', '...octobre 1892...trois corps...tunnels...', '...le shérif Morrison a classé...', '...jamais retrouv...'],
+    'open 2': () => ['ERREUR: Accès partiel.', 'RAPPORT DE POLICE — RAVENWOOD — 1er NOV 1952', 'Famille ASHWORTH — 7 personnes', 'Statut: INTROUVABLES', 'Note: Dîner encore chaud sur la table', 'Bougies allumées. Aucune lutte.', '[RESTE DU FICHIER MANQUANT]'],
+    'open 3': () => ['⛔ ACCÈS REFUSÉ — NIVEAU 7 REQUIS', '...', 'Cause du décès: Arrêt cardiaque', 'Anomalie: Aucun antécédent', 'Note légiste: "Expression de terreur figée"', '...', '⛔ CONNEXION INTERROMPUE'],
     'open 4': () => [
       'OUVERTURE: notes_bertrand.txt',
       '═══════════════════════════════════════',
+      'Journal de Victor Bertrand — 2 janvier 2016',
+      '',
       'Les trois familles sont liées depuis 1847.',
       'Le pacte original... je l\'ai trouvé.',
-      'Tous les 10 ans, une offrande.',
+      'Tous les 10 ans, une offrande est requise.',
+      '',
       'Le Veilleur n\'est pas une légende.',
-      'IL EST RÉEL.',
-      'Si vous lisez ceci, il vous a déjà vu.',
+      'IL EST RÉEL. IL EXISTE.',
+      '',
+      'Si vous lisez ceci après ma mort,',
+      'PROTÉGEZ MADELEINE.',
+      '',
+      'Elle est la clé. Elle peut tout arrêter.',
+      '',
+      'Le code est caché sous l\'église.',
       '═══════════════════════════════════════',
       '[FIN DU FICHIER]',
     ],
-    'open 1': () => ['ERREUR: Fichier corrompu. 3% récupérable.', '...1892...trois...tunnels...jamais retrouv...'],
-    'open 2': () => ['ERREUR: Accès partiel.', 'RAPPORT: Aucune trace de...', '[DONNÉES MANQUANTES]'],
-    'open 3': () => ['⛔ ACCÈS REFUSÉ', 'NIVEAU DE SÉCURITÉ INSUFFISANT'],
-    'open 5': () => ['⛔ ACCÈS REFUSÉ', '...', 'Il sait que vous cherchez.', '...', 'DÉCONNEXION DANS 5...4...3...'],
-    'map': () => ['COORDONNÉES ACTIVES:', 'LAT: 42.████', 'LONG: -71.████', 'VOTRE POSITION: ▓▓▓▓▓▓▓▓▓▓', '⚠️ LOCALISATION EN COURS...'],
-    'search': () => ['RECHERCHE: En attente de paramètre', 'Usage: SEARCH [terme]'],
-    'search veilleur': () => ['RECHERCHE: "VEILLEUR"', '─────────────────────', '47 RÉSULTATS TROUVÉS', 'ACCÈS RESTREINT', '...', '"Celui qui observe depuis les ombres"', '"Ne cherchez pas à le trouver."', '"Il vous trouvera."'],
-    'search ashworth': () => ['RECHERCHE: "ASHWORTH"', '─────────────────────', 'FAMILLE FONDATRICE #3', 'DERNIERS MEMBRES: 1952', 'STATUT: LIGNÉE ÉTEINTE (?)', '⚠️ FICHIERS SCELLÉS PAR ORDRE DU TRIBUNAL'],
-    'exit': () => ['FERMETURE DU TERMINAL...', 'Le Veilleur vous remercie de votre visite.'],
-    'veilleur': () => ['...', '...', '...', 'Vous n\'auriez pas dû taper ça.', '...', 'IL VOUS A VU.'],
-    '1847': () => ['CODE ACCEPTÉ', '─────────────────────', 'ACCÈS NIVEAU 2 DÉBLOQUÉ', 'Indice: "Sous l\'église, la vérité dort."'],
-    'default': () => ['COMMANDE NON RECONNUE', 'Tapez HELP pour la liste des commandes.'],
+    'open 5': () => ['⛔ ACCÈS REFUSÉ', '...', 'ALERTE: Tentative d\'accès non autorisé', '...', 'IL SAIT QUE VOUS CHERCHEZ.', '...', 'DÉCONNEXION DANS 5...4...3...2...1...', '...', 'Trop tard. Il vous a vu.'],
+    'open 6': () => [
+      '▶️ LECTURE: enregistrement_2h13.mp3',
+      '════════════════════════════════════',
+      '[BRUIT DE FOND — RESPIRATION]',
+      '',
+      'Eleanor (chuchotant): "Il est 2h13.',
+      'Je sais que quelqu\'un m\'écoute.',
+      'Le registre de 1892... je l\'ai trouvé.',
+      '',
+      'Les sept noms. Les trois familles.',
+      'Tout est connecté depuis le début.',
+      '',
+      '[BRUIT — CRAQUEMENT]',
+      '',
+      'Il y a quelqu\'un dans la maison.',
+      'Si vous écoutez ceci, c\'est que je suis...',
+      '',
+      '[FIN DE L\'ENREGISTREMENT]',
+      '════════════════════════════════════',
+      'Fichier créé: 7 août 1996, 02:13:47',
+      'Eleanor Price décédée: 8 août 1996',
+    ],
+    'open 7': () => [
+      '📁 DOSSIER #7 — LES SEPT DE RAVENWOOD',
+      '════════════════════════════════════════',
+      'Ce dossier est disponible en téléchargement.',
+      '',
+      '➡️ INSCRIS-TOI POUR LE RECEVOIR',
+      '',
+      'Le Veilleur récompense ceux qui cherchent.',
+      '════════════════════════════════════════',
+    ],
+    'map': () => ['COORDONNÉES RAVENWOOD:', 'LAT: 42.████', 'LONG: -71.████', '', 'LIEUX MARQUÉS:', '• Manoir Lewis — Colline Nord', '• Tunnels — ZONE INTERDITE', '• Église Saint-Mary — Centre', '• Cimetière des Fondateurs — Est', '', '⚠️ VOTRE POSITION EST SURVEILLÉE'],
+    
+    // RECHERCHE
+    'search': () => ['RECHERCHE: En attente de paramètre', 'Usage: SEARCH [terme]', '', 'Suggestions: veilleur, ashworth, tunnels, pacte, 1847'],
+    'search veilleur': () => ['RECHERCHE: "VEILLEUR"', '─────────────────────', '147 RÉSULTATS TROUVÉS', '', '"Le Veilleur" — Entité mentionnée dans:', '• Folklore local depuis 1847', '• Témoignages de 23 survivants', '• Notes de Victor Bertrand', '', '"Celui qui observe depuis les ombres"', '"Ne cherchez pas à le trouver."', '"Il vous trouvera."', '', '⚠️ CERTAINS FICHIERS SONT SCELLÉS'],
+    'search ashworth': () => ['RECHERCHE: "ASHWORTH"', '─────────────────────', 'FAMILLE FONDATRICE #3', 'Arrivée à Ravenwood: 1847', 'Derniers membres: 1952', 'Statut: LIGNÉE ÉTEINTE (?)', '', 'Note: Testament scellé jamais ouvert', '⚠️ FICHIERS SCELLÉS PAR ORDRE DU TRIBUNAL'],
+    'search lewis': () => ['RECHERCHE: "LEWIS"', '─────────────────────', 'FAMILLE FONDATRICE #1', 'Arrivée à Ravenwood: 1847', 'Statut: LIGNÉE ACTIVE', '', '⚠️ ALERTE: Membre actuel identifié', 'Capitaine Marcus LEWIS — Police de Ravenwood', '', 'Coïncidence? Le Veilleur ne croit pas aux coïncidences.'],
+    'search morrison': () => ['RECHERCHE: "MORRISON"', '─────────────────────', 'FAMILLE FONDATRICE #2', 'Arrivée à Ravenwood: 1847', 'Statut: LIGNÉE ACTIVE', '', 'Note: Shérif Morrison (1867) a classé', 'l\'affaire Mitchell en 3 jours.', '', 'Les Morrison ont toujours été dans la police...'],
+    'search tunnels': () => ['RECHERCHE: "TUNNELS"', '─────────────────────', '12km de galeries souterraines', 'Construction: Inconnue (pré-1847?)', 'Accès: STRICTEMENT INTERDIT depuis 1954', '', 'Disparitions documentées: 23', 'Corps retrouvés: 0', '', '⚠️ "Ce qui entre n\'en ressort pas"'],
+    'search pacte': () => ['RECHERCHE: "PACTE"', '─────────────────────', 'Référence trouvée dans:', '• Notes de Victor Bertrand', '• Lettre des Ashworth (1952)', '• Registre paroissial (pages arrachées)', '', '"Les trois familles ont signé en 1847."', '"Tous les dix ans, une offrande."', '"Le prix du silence."', '', '⚠️ ACCÈS NIVEAU 7 REQUIS POUR PLUS'],
+    'search 1847': () => ['RECHERCHE: "1847"', '─────────────────────', 'Année de fondation de Ravenwood', 'Arrivée des trois familles:', '• Lewis', '• Morrison', '• Ashworth', '', 'Événement: Signature du "Pacte Original"', 'Détails: [DONNÉES EFFACÉES]', '', '💡 Tapez 1847 comme commande...'],
+    
+    // COMMANDE WHO — Recherche de personnes
+    'who': () => ['RECHERCHE PERSONNE: En attente', 'Usage: WHO [nom]', '', 'Personnes dans la base:', 'madeleine, victor, eleanor, sarah,', 'margaret, thomas, lewis'],
+    'who madeleine': () => ['DOSSIER: Madeleine BERTRAND', '═══════════════════════════════════════', 'Née: 1998 | Statut: DISPARUE', 'Profession: Historienne', 'Lien: Fille de Victor Bertrand', '', 'Dernière localisation:', '15 mars 2026, 23h47 — Bibliothèque', '', 'Dernier message:', '"J\'ai trouvé le lien entre les trois familles."', '', '⚠️ RECHERCHES EN COURS'],
+    'who victor': () => ['DOSSIER: Victor BERTRAND', '═══════════════════════════════════════', 'Né: 1958 | Décédé: 2016', 'Profession: Professeur d\'Histoire', '', 'Cause officielle: Suicide', 'Anomalie: Porte verrouillée de l\'intérieur', '          Clé retrouvée à l\'extérieur', '', 'Dernière note: "Protégez Madeleine"'],
+    'who eleanor': () => ['DOSSIER: Eleanor PRICE', '═══════════════════════════════════════', 'Née: 1944 | Décédée: 1996', 'Profession: Archiviste municipale', '', 'A découvert le registre de 1892', 'Morte 3 jours après', '', 'Son dernier enregistrement:', '"Le Veilleur n\'est pas une légende. IL EST RÉEL."', '', 'C\'est elle qui a créé le Dossier #7.'],
+    'who sarah': () => ['DOSSIER: Sarah MITCHELL', '═══════════════════════════════════════', 'Née: 1843 | Disparue: 1867', 'Profession: Institutrice', '', 'PREMIÈRE VICTIME DOCUMENTÉE', '', 'Dernière personne à l\'avoir vue:', 'Shérif ████████ Morrison', '', '"Elle savait quelque chose sur les tunnels."'],
+    'who margaret': () => ['DOSSIER: Margaret HOLLOWAY', '═══════════════════════════════════════', 'Née: 1864 | Disparue: 1892', 'Profession: Sage-femme', '', 'Appelée au manoir Ashworth', 'pour un accouchement...', '', 'Aucun enfant n\'est officiellement né', 'cette nuit-là.', '', '"Qu\'est-ce qui est vraiment né?"'],
+    'who thomas': () => ['DOSSIER: Thomas ASHWORTH III', '═══════════════════════════════════════', 'Né: 1907 | Disparu: 1952', 'Profession: Héritier', '', 'Toute la famille (7 personnes)', 'a disparu la nuit d\'Halloween.', '', 'Le dîner était encore sur la table.', 'Les bougies encore allumées.', '', 'Ils l\'attendaient. Ils SAVAIENT.'],
+    
+    // CODES SECRETS — DATES
+    'date': () => ['ARCHIVES TEMPORELLES', 'Usage: DATE [année]', '', 'Années clés: 1847, 1867, 1892, 1952, 1996, 2016, 2026'],
+    '1847': () => ['🔓 CODE TEMPOREL ACCEPTÉ', '═══════════════════════════════════════', 'ANNÉE: 1847', '', '• Fondation de Ravenwood', '• Arrivée des trois familles', '• Signature du Pacte Original', '', 'INDICE DÉBLOQUÉ:', '"Sous l\'église, dans la septième crypte,', 'le premier nom est gravé dans la pierre."', '', '💡 Partagez #1847LeVeilleur'],
+    '1867': () => ['🔓 CODE TEMPOREL ACCEPTÉ', '═══════════════════════════════════════', 'ANNÉE: 1867', '', '• Première disparition: Sarah Mitchell', '• Le shérif Morrison classe l\'affaire', '• 20 ans après le pacte', '', 'INDICE DÉBLOQUÉ:', '"Le médaillon trouvé près des tunnels', 'portait le symbole des trois familles."', '', '💡 Partagez #SarahMitchell1867'],
+    '1892': () => ['🔓 CODE TEMPOREL ACCEPTÉ', '═══════════════════════════════════════', 'ANNÉE: 1892', '', '• Trois victimes en une semaine', '• ████████ Lewis disparaît', '• Margaret Holloway: l\'accouchement mystère', '', 'INDICE DÉBLOQUÉ:', '"Cette nuit-là, quelque chose est né.', 'Pas un enfant. Quelque chose d\'autre."', '', '💡 Partagez #Ravenwood1892'],
+    '1952': () => ['🔓 CODE TEMPOREL ACCEPTÉ', '═══════════════════════════════════════', 'ANNÉE: 1952', '', '• Halloween: les Ashworth disparaissent', '• 7 personnes, aucune trace', '• Le manoir scellé pendant 40 ans', '', 'INDICE DÉBLOQUÉ:', '"Ils ont essayé de rompre le pacte.', 'Le Veilleur n\'accepte pas les traîtres."', '', '💡 Partagez #Halloween1952'],
+    '1996': () => ['🔓 CODE TEMPOREL ACCEPTÉ', '═══════════════════════════════════════', 'ANNÉE: 1996', '', '• Eleanor Price trouve le registre', '• Morte 3 jours après', '• Le Dossier #7 est créé', '', 'INDICE DÉBLOQUÉ:', '"Son enregistrement de 2h13 contient', 'un message caché. Écoutez attentivement."', '', '💡 Partagez #EleanorPrice1996'],
+    '2016': () => ['🔓 CODE TEMPOREL ACCEPTÉ', '═══════════════════════════════════════', 'ANNÉE: 2016', '', '• Victor Bertrand "se suicide"', '• 847 pages de recherches disparaissent', '• Sa fille jure de continuer', '', 'INDICE DÉBLOQUÉ:', '"La clé était à l\'extérieur.', 'Qui ferme une porte de l\'intérieur', 'et laisse la clé dehors?"', '', '💡 Partagez #VictorBertrand'],
+    '2026': () => ['⚠️ ACCÈS EN TEMPS RÉEL', '═══════════════════════════════════════', 'ANNÉE: 2026 — MAINTENANT', '', '• 15 mars: Madeleine disparaît', '• Son message: "J\'ai trouvé le lien"', '• L\'enquête est en cours', '', 'INDICE DÉBLOQUÉ:', '"Le cycle de 10 ans continue.', '2026... 2036... 2046...', 'Qui sera le prochain?"', '', '⚠️ IL VOUS OBSERVE EN CE MOMENT'],
+    
+    // MOTS-CLÉS SECRETS
+    'veilleur': () => ['...', '...', '...', 'Vous n\'auriez pas dû taper ça.', '...', '...', 'IL VOUS A VU.', '...', 'IL CONNAÎT VOTRE NOM.', '...', '🕷️'],
+    'le veilleur': () => ['...', 'Qui ose prononcer ce nom?', '...', 'Le Veilleur observe depuis 1847.', 'Le Veilleur protège le pacte.', 'Le Veilleur punit les curieux.', '...', 'Et maintenant...', '...', 'IL T\'A TROUVÉ.', '🕷️'],
+    'qui es-tu': () => ['...', 'Tu poses les mauvaises questions.', '...', 'La bonne question est:', '"Que suis-je prêt à sacrifier pour la vérité?"', '...'],
+    'qui est le veilleur': () => ['RECHERCHE INTERDITE', '═══════════════════════════════════════', '...', 'Le Veilleur n\'est pas UN.', 'Le Veilleur est PLUSIEURS.', 'Le Veilleur est ÉTERNEL.', '...', 'Depuis 1847, le pacte exige un gardien.', 'Quelqu\'un doit TOUJOURS veiller.', '...', 'Tu veux vraiment savoir?', '', 'La réponse est dans le livre.', '═══════════════════════════════════════'],
+    
+    // EASTER EGGS — CODES À PARTAGER
+    'jevousvois': () => ['🕷️ CODE ACCEPTÉ 🕷️', '═══════════════════════════════════════', 'Bienvenue, Enquêteur.', '', 'Tu as trouvé l\'adresse email du Veilleur.', 'jevousvois@secret-du-veilleur.fr', '', 'BONUS DÉBLOQUÉ:', 'Le Veilleur te récompensera...', '', '💡 Partage #JeVousVois sur TikTok'],
+    'araignee': () => ['🕷️', '...', 'L\'araignée tisse sa toile.', 'Sept fils. Sept victimes.', 'Tous connectés au centre.', '...', 'Et au centre... le Veilleur attend.', '', '💡 Partage #LaToileMortelle'],
+    'toile': () => ['LA TOILE MORTELLE', '═══════════════════════════════════════', 'Chaque victime est un fil.', 'Chaque fil mène au centre.', 'Au centre: le secret de 1847.', '', 'Les trois familles ont tissé cette toile.', 'Et maintenant, ils sont prisonniers.', '', 'Toi aussi, tu es pris dans la toile.', '', '💡 Tu viens d\'y entrer...'],
+    'sept': () => ['LE CHIFFRE 7', '═══════════════════════════════════════', '7 victimes principales', '7 personnes chez les Ashworth', '7 pages du registre de 1892', '7 cryptes sous l\'église', '', 'Le 7 est partout.', 'Le 7 est la clé.', '', '💡 Tape DOSSIER7 pour plus...'],
+    '7': () => ['LE CHIFFRE 7', '═══════════════════════════════════════', '7 victimes principales', '7 personnes chez les Ashworth', '7 pages du registre de 1892', '7 cryptes sous l\'église', '', 'Le 7 est partout.', 'Le 7 est la clé.', '', '💡 Tape DOSSIER7 pour plus...'],
+    'dossier7': () => ['📁 DOSSIER #7 — ACCÈS AUTORISÉ', '═══════════════════════════════════════', '', 'Le Dossier #7 contient:', '• Les 7 victimes documentées', '• Les connexions entre les familles', '• Les indices d\'Eleanor Price', '', '➡️ INSCRIS-TOI POUR LE TÉLÉCHARGER', 'Tu recevras le PDF complet par email.', '', 'Le Veilleur récompense les curieux...', '...mais punit les imprudents.', '═══════════════════════════════════════'],
+    'dossier 7': () => ['📁 DOSSIER #7 — ACCÈS AUTORISÉ', '═══════════════════════════════════════', '', 'Le Dossier #7 contient:', '• Les 7 victimes documentées', '• Les connexions entre les familles', '• Les indices d\'Eleanor Price', '', '➡️ INSCRIS-TOI POUR LE TÉLÉCHARGER', 'Tu recevras le PDF complet par email.', '', 'Le Veilleur récompense les curieux...', '...mais punit les imprudents.', '═══════════════════════════════════════'],
+    
+    // CODES SECRETS AVANCÉS
+    'rvw': () => ['CODE RVW RECONNU', 'Ravenwood Victim Watch', 'Base de données active depuis 1996', '', 'Tapez RVW-[ANNÉE]-[NUMÉRO]', 'Exemple: RVW-1867-001'],
+    'rvw-1867-001': () => ['ACCÈS DOSSIER INDIVIDUEL', '═══════════════════════════════════════', 'Sarah Mitchell — La Première', '', 'Ce que le dossier ne dit pas:', 'Elle avait découvert l\'entrée des tunnels.', 'Elle avait vu quelque chose EN DESSOUS.', '', 'Son journal intime contenait un dessin.', 'Un symbole. Le même que dans la cave Ashworth.', '═══════════════════════════════════════'],
+    'tunnels': () => ['⚠️ ZONE INTERDITE ⚠️', '═══════════════════════════════════════', '12km de galeries souterraines', 'Origine: Inconnue', 'Profondeur max: 47 mètres', '', 'DISPARITIONS: 23', 'CORPS RETROUVÉS: 0', '', '"Ce qui descend ne remonte pas."', '"Les murs ont des oreilles."', '"Dans le noir, quelque chose respire."', '', '⛔ ACCÈS PHYSIQUE INTERDIT DEPUIS 1954'],
+    'pacte': () => ['LE PACTE DE 1847', '═══════════════════════════════════════', 'Les trois familles fondatrices:', 'LEWIS • MORRISON • ASHWORTH', '', 'Ont signé un accord.', 'Un accord de sang.', 'Un accord... contre nature.', '', 'En échange: prospérité, pouvoir, longévité.', 'Le prix: Une offrande. Tous les dix ans.', '', 'Le Veilleur est le gardien du pacte.', '═══════════════════════════════════════'],
+    'eglise': () => ['ÉGLISE SAINT-MARY', '═══════════════════════════════════════', 'Construite en 1852', 'Architecte: ████████ Ashworth', '', 'Les registres sont incomplets depuis 1892.', 'Plusieurs pages arrachées.', '', 'Sous l\'église: 7 cryptes.', 'La 7ème n\'a jamais été ouverte.', '', '"Sous l\'église, la vérité dort."', '    — Notes de Victor Bertrand'],
+    'crypte': () => ['LES CRYPTES DE SAINT-MARY', '═══════════════════════════════════════', 'Crypte 1-6: Fondateurs décédés', 'Crypte 7: SCELLÉE', '', 'Aucun registre de qui y repose.', 'La porte porte le symbole des trois familles.', '', 'Victor Bertrand a essayé de l\'ouvrir.', 'Il est mort 3 jours après.', '', '⚠️ "Ne réveillez pas ce qui dort."'],
+    'manoir': () => ['MANOIR LEWIS', '═══════════════════════════════════════', 'Construit: 1848', 'Propriétaires actuels: Famille Lewis', '', 'Les sous-sols n\'ont jamais été', 'entièrement cartographiés.', '', 'On dit que des galeries connectent', 'le manoir aux tunnels principaux.', '', 'Certaines nuits, on entend des cris.'],
+    
+    // COMMANDES SYSTÈME
+    'exit': () => ['FERMETURE DU TERMINAL...', '...', 'Le Veilleur vous remercie de votre visite.', '...', 'IL N\'OUBLIERA PAS VOTRE VISAGE.'],
+    'clear': () => ['TERMINAL EFFACÉ', 'Mais le Veilleur se souvient de tout.'],
+    'admin': () => ['⛔ ACCÈS REFUSÉ', 'Mot de passe requis.'],
+    'password': () => ['⛔ ACCÈS REFUSÉ', 'Le mot de passe n\'est pas un mot.', 'C\'est une date.', '...', 'Le jour où tout a commencé.'],
+    'root': () => ['⛔ ACCÈS REFUSÉ', 'Bien essayé.', '...', 'Le Veilleur apprécie les curieux.'],
+    'hack': () => ['TENTATIVE DE PIRATAGE DÉTECTÉE', '...', 'LOCALISATION EN COURS...', '...', 'TROUVÉ.', '...', 'Le Veilleur arrive.'],
+    'secret': () => ['🔐 SECRETS DISPONIBLES', '═══════════════════════════════════════', 'Tu cherches des secrets?', '', 'Essaie:', '• Les années clés (1847, 1892...)', '• Les noms des familles', '• Les lieux (tunnels, église...)', '• Ou simplement... VEILLEUR', '', 'Chaque secret débloqué = un indice.', 'Partage-les sur TikTok avec #LeVeilleur'],
+    'indices': () => ['🔍 INDICES DISPONIBLES', '═══════════════════════════════════════', 'Pour débloquer des indices:', '', '→ Tape une ANNÉE clé (1847, 1867...)', '→ Tape un NOM (madeleine, victor...)', '→ Tape un LIEU (tunnels, église...)', '→ Tape un MOT-CLÉ (pacte, veilleur...)', '', 'Les indices révèlent l\'histoire.', 'L\'histoire révèle la vérité.', 'La vérité... est dans le livre.'],
+    'aide': () => ['AIDE EN FRANÇAIS', '═══════════════════════════════════════', 'Ce terminal est un accès aux archives', 'secrètes de Ravenwood.', '', 'Commandes de base: HELP', 'Recherche: SEARCH [mot]', 'Personnes: WHO [nom]', '', 'OU... tape directement des mots-clés:', 'années, noms, lieux...', '', 'Certains secrets sont bien cachés. 🕷️'],
+    
+    // DEFAULT
+    'default': () => ['COMMANDE NON RECONNUE', 'Tapez HELP pour la liste des commandes.', '', '💡 Ou essayez de taper un mot-clé...', '   (année, nom, lieu, secret...)'],
   };
 
   // CARTE LOCATIONS
@@ -462,13 +743,21 @@ export default function App() {
     }
   }, [introPhase, introComplete]);
 
-  // Géolocalisation
+  // Géolocalisation réelle par IP
   useEffect(() => {
-    const cities = ['Paris', 'Lyon', 'Marseille', 'Bordeaux', 'Lille', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier'];
-    // Simuler une géoloc (en vrai on utiliserait une API)
-    setTimeout(() => {
-      setUserCity(cities[Math.floor(Math.random() * cities.length)]);
-    }, 2000);
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        if (data.city) {
+          setUserCity(data.city);
+        } else {
+          setUserCity('VOTRE POSITION');
+        }
+      })
+      .catch(() => {
+        // Fallback si l'API ne répond pas
+        setUserCity('VOTRE POSITION');
+      });
   }, []);
 
   // Temps sur le site + inactivité
@@ -728,15 +1017,203 @@ export default function App() {
       response = terminalCommands[searchCmd] ? terminalCommands[searchCmd]() : terminalCommands['search']();
     } else if (cmd.startsWith('open ')) {
       response = terminalCommands[cmd] ? terminalCommands[cmd]() : ['ERREUR: Fichier non trouvé.'];
+    } else if (cmd.startsWith('who ')) {
+      response = terminalCommands[cmd] ? terminalCommands[cmd]() : ['ERREUR: Personne non trouvée.'];
     } else {
       response = terminalCommands['default']();
     }
 
+    // ════════════════════════════════════════════════════════════════════════
+    // SYSTÈME ESCAPE GAME — DÉBLOCAGES
+    // ════════════════════════════════════════════════════════════════════════
+    
+    // CODE 1847 — Débloque la BOUSSOLE
+    if (cmd === '1847') {
+      if (!compassUnlocked) {
+        setCompassUnlocked(true);
+        unlockFeature('COMPASS');
+        addClue('CODE_1847');
+        setTimeout(() => {
+          showGameNotification('🧭 BOUSSOLE DÉBLOQUÉE ! Cliquez sur l\'icône boussole pour l\'ouvrir.', 'unlock');
+        }, 2000);
+      }
+    }
+    
+    // CODE CRYPTE7 — Débloque la PHOTO 1892
+    if (cmd === 'crypte7') {
+      if (unlockedFeatures.has('CRYPTE7') && !photoUnlocked) {
+        setPhotoUnlocked(true);
+        unlockFeature('PHOTO_1892');
+        addClue('CODE_CRYPTE7');
+        response = [
+          '🔓 CODE CRYPTE7 ACCEPTÉ',
+          '═══════════════════════════════════════',
+          'ACCÈS AUX ARCHIVES PHOTOGRAPHIQUES',
+          '',
+          'Une photo de groupe datant de 1892 est maintenant accessible.',
+          'Un visage a été GRATTÉ sur cette photo.',
+          '',
+          '➡️ Cliquez sur l\'icône PHOTO pour l\'examiner.',
+          '   Peut-être pourrez-vous révéler ce qui a été caché...',
+          '═══════════════════════════════════════',
+        ];
+        setTimeout(() => {
+          showGameNotification('📷 PHOTO 1892 DÉBLOQUÉE ! Grattez pour révéler le visage caché.', 'unlock');
+        }, 2000);
+      } else if (!unlockedFeatures.has('CRYPTE7')) {
+        response = [
+          '⛔ CODE NON RECONNU',
+          'Ce code n\'a pas encore été découvert.',
+          '',
+          '💡 Indice: La boussole montre le chemin...',
+        ];
+      }
+    }
+    
+    // NOM RÉVÉLÉ — Débloque l'AUDIO
+    if (cmd === 'ezekiel' || cmd === 'ezekiel lewis') {
+      if (faceRevealed && !audioClueUnlocked) {
+        setAudioClueUnlocked(true);
+        unlockFeature('AUDIO_ELEANOR');
+        addClue('NAME_EZEKIEL');
+        response = [
+          '🔓 IDENTITÉ CONFIRMÉE: EZEKIEL LEWIS',
+          '═══════════════════════════════════════',
+          'Premier fils de la famille Lewis.',
+          'Officiellement "disparu" en 1892.',
+          '',
+          'Mais pourquoi effacer son visage de TOUTES les photos?',
+          'Que cachait la famille?',
+          '',
+          'Un enregistrement audio d\'Eleanor Price',
+          'mentionnant ce nom a été retrouvé.',
+          '',
+          '➡️ Cliquez sur l\'icône AUDIO pour l\'écouter.',
+          '═══════════════════════════════════════',
+        ];
+        setTimeout(() => {
+          showGameNotification('🎧 AUDIO DÉBLOQUÉ ! Écoutez le dernier message d\'Eleanor.', 'unlock');
+        }, 2000);
+      } else if (!faceRevealed) {
+        response = [
+          'RECHERCHE: "EZEKIEL"',
+          '─────────────────────',
+          '⚠️ DONNÉES PARTIELLEMENT EFFACÉES',
+          '',
+          'Ce nom apparaît dans les archives...',
+          'mais les détails sont ████████.',
+          '',
+          '💡 Un indice visuel pourrait aider.',
+        ];
+      }
+    }
+    
+    // CODE TUNNELS — Débloque l'exploration
+    if (cmd === 'tunnels' || cmd === 'explorer tunnels' || cmd === 'entrer tunnels') {
+      if (audioPlayed && !tunnelsUnlocked) {
+        setTunnelsUnlocked(true);
+        unlockFeature('TUNNELS');
+        addClue('TUNNELS_UNLOCKED');
+        response = [
+          '🔓 ACCÈS AUX TUNNELS AUTORISÉ',
+          '═══════════════════════════════════════',
+          '⚠️ AVERTISSEMENT: ZONE DANGEREUSE',
+          '',
+          'Les tunnels sous Ravenwood s\'étendent',
+          'sur plus de 12km. 23 personnes y ont disparu.',
+          '',
+          'Êtes-vous sûr de vouloir entrer?',
+          '',
+          '➡️ Cliquez sur l\'icône TUNNELS pour explorer.',
+          '   À vos risques et périls...',
+          '═══════════════════════════════════════',
+        ];
+        setTimeout(() => {
+          showGameNotification('🚇 TUNNELS DÉBLOQUÉS ! Explorez... si vous l\'osez.', 'unlock');
+        }, 2000);
+      } else if (!audioPlayed) {
+        response = terminalCommands['tunnels'] ? terminalCommands['tunnels']() : [
+          '⛔ ACCÈS REFUSÉ',
+          'Vous devez d\'abord découvrir comment y entrer.',
+          '',
+          '💡 Eleanor Price connaissait le chemin...',
+        ];
+      }
+    }
+    
+    // CODE FINAL — VERITASNEX
+    if (cmd === 'veritasnex') {
+      if (unlockedFeatures.has('FINAL_CODE')) {
+        setEliteStatus(true);
+        setGameLevel(5);
+        addClue('FINAL_CODE_ENTERED');
+        response = [
+          '🏆 CODE FINAL ACCEPTÉ: VERITASNEX',
+          '═══════════════════════════════════════',
+          '',
+          'VERITASNEX — "La vérité est le lien"',
+          '',
+          'Tu as traversé les ténèbres.',
+          'Tu as découvert les secrets.',
+          'Tu as survécu aux tunnels.',
+          '',
+          'Le Veilleur te reconnaît.',
+          '',
+          '════════ STATUT: ENQUÊTEUR ÉLITE ════════',
+          '',
+          'Tu fais maintenant partie de ceux qui SAVENT.',
+          '',
+          'La vérité complète t\'attend dans le livre.',
+          'Mind Games — Tome 1: La Toile Mortelle',
+          '',
+          '🕷️ Le Veilleur t\'observera toujours. 🕷️',
+          '═══════════════════════════════════════',
+        ];
+        setTimeout(() => {
+          showGameNotification('🏆 FÉLICITATIONS ! Tu es maintenant un ENQUÊTEUR ÉLITE !', 'elite');
+          setShowJumpscare(true);
+          setTimeout(() => setShowJumpscare(false), 300);
+        }, 3000);
+      } else {
+        response = [
+          '⛔ CODE NON RECONNU',
+          'Ce code existe... quelque part dans les ténèbres.',
+          '',
+          '💡 Les tunnels cachent de nombreux secrets.',
+        ];
+      }
+    }
+    
+    // Afficher le statut du jeu
+    if (cmd === 'progress' || cmd === 'progression' || cmd === 'niveau') {
+      const features = Array.from(unlockedFeatures);
+      response = [
+        '📊 PROGRESSION ESCAPE GAME',
+        '═══════════════════════════════════════',
+        `NIVEAU: ${gameLevel}/5`,
+        `INDICES TROUVÉS: ${foundClues.length}`,
+        `STATUT: ${eliteStatus ? '🏆 ENQUÊTEUR ÉLITE' : 'En cours...'}`,
+        '',
+        'ÉLÉMENTS DÉBLOQUÉS:',
+        compassUnlocked ? '✅ Boussole' : '🔒 Boussole',
+        photoUnlocked ? '✅ Photo 1892' : '🔒 Photo 1892',
+        audioClueUnlocked ? '✅ Audio Eleanor' : '🔒 Audio Eleanor',
+        tunnelsUnlocked ? '✅ Tunnels' : '🔒 Tunnels',
+        eliteStatus ? '✅ Statut Élite' : '🔒 Statut Élite',
+        '',
+        '═══════════════════════════════════════',
+      ];
+    }
+
     // Effet spécial pour certaines commandes
-    if (cmd === 'veilleur') {
+    if (cmd === 'veilleur' || cmd === 'le veilleur') {
       setTimeout(() => {
         setGlitch(true);
-        setTimeout(() => setGlitch(false), 500);
+        setFlickerScreen(true);
+        setTimeout(() => {
+          setGlitch(false);
+          setFlickerScreen(false);
+        }, 500);
       }, 2000);
     }
     if (cmd === 'open 5') {
@@ -1064,6 +1541,137 @@ export default function App() {
                 autoFocus
               />
             </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {/* ESCAPE GAME — NOTIFICATION */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {escapeGameNotification && (
+        <div style={{
+          position: 'fixed',
+          top: 100,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 2000,
+          background: escapeGameNotification.type === 'elite' ? 'linear-gradient(135deg, #ffd700, #ff8c00)' : 
+                      escapeGameNotification.type === 'danger' ? 'linear-gradient(135deg, #dc2626, #7f1d1d)' :
+                      'linear-gradient(135deg, #059669, #047857)',
+          padding: '15px 30px',
+          borderRadius: 8,
+          boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+          animation: 'slideDown 0.5s ease-out'
+        }}>
+          <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 14, color: '#fff', textAlign: 'center', margin: 0 }}>
+            {escapeGameNotification.message}
+          </p>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {/* ESCAPE GAME — BARRE D'OUTILS FLOTTANTE */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      <div className="escape-toolbar" style={{
+        position: 'fixed',
+        right: 20,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        background: 'rgba(0,0,0,0.8)',
+        padding: 10,
+        borderRadius: 8,
+        border: '1px solid #333'
+      }}>
+        <div style={{ padding: '8px 12px', background: 'linear-gradient(135deg, #1a1a1a, #0a0a0a)', borderRadius: 4, textAlign: 'center', marginBottom: 5 }}>
+          <div style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 9, color: '#666', marginBottom: 2 }}>NIVEAU</div>
+          <div style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 18, color: eliteStatus ? '#ffd700' : '#dc143c', fontWeight: 'bold' }}>{gameLevel}/5</div>
+        </div>
+        <button onClick={() => compassUnlocked && setShowCompass(true)} disabled={!compassUnlocked} style={{ width: 50, height: 50, borderRadius: 8, border: compassUnlocked ? '2px solid #059669' : '2px solid #333', background: compassUnlocked ? 'linear-gradient(135deg, #064e3b, #022c22)' : '#1a1a1a', cursor: compassUnlocked ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: compassUnlocked ? 1 : 0.4 }} title={compassUnlocked ? 'Boussole' : '🔒 Tapez 1847'}>🧭</button>
+        <button onClick={() => photoUnlocked && setShowPhoto1892(true)} disabled={!photoUnlocked} style={{ width: 50, height: 50, borderRadius: 8, border: photoUnlocked ? '2px solid #059669' : '2px solid #333', background: photoUnlocked ? 'linear-gradient(135deg, #064e3b, #022c22)' : '#1a1a1a', cursor: photoUnlocked ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: photoUnlocked ? 1 : 0.4 }} title={photoUnlocked ? 'Photo 1892' : '🔒 Boussole'}>📷</button>
+        <button onClick={() => audioClueUnlocked && setShowAudioPlayer(true)} disabled={!audioClueUnlocked} style={{ width: 50, height: 50, borderRadius: 8, border: audioClueUnlocked ? '2px solid #059669' : '2px solid #333', background: audioClueUnlocked ? 'linear-gradient(135deg, #064e3b, #022c22)' : '#1a1a1a', cursor: audioClueUnlocked ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: audioClueUnlocked ? 1 : 0.4 }} title={audioClueUnlocked ? 'Audio' : '🔒 Photo'}>🎧</button>
+        <button onClick={() => tunnelsUnlocked && setShowTunnels(true)} disabled={!tunnelsUnlocked} style={{ width: 50, height: 50, borderRadius: 8, border: tunnelsUnlocked ? '2px solid #dc2626' : '2px solid #333', background: tunnelsUnlocked ? 'linear-gradient(135deg, #7f1d1d, #450a0a)' : '#1a1a1a', cursor: tunnelsUnlocked ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: tunnelsUnlocked ? 1 : 0.4 }} title={tunnelsUnlocked ? 'Tunnels' : '🔒 Audio'}>🚇</button>
+        {eliteStatus && (<div style={{ width: 50, height: 50, borderRadius: 8, border: '2px solid #ffd700', background: 'linear-gradient(135deg, #78350f, #451a03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, animation: 'pulse 2s infinite' }} title="🏆 ÉLITE">🏆</div>)}
+      </div>
+
+      {/* BOUSSOLE 3D */}
+      {showCompass && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1600, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }} onClick={() => setShowCompass(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+            <h2 style={{ fontFamily: 'Cinzel, serif', color: '#fff', marginBottom: 10 }}>BOUSSOLE ANCIENNE</h2>
+            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginBottom: 30 }}>Faites glisser • Certaines directions cachent des secrets (200°-230°)</p>
+            <div style={{ width: 300, height: 300, borderRadius: '50%', background: 'linear-gradient(135deg, #1a1a1a, #0a0a0a)', border: '8px solid #333', boxShadow: '0 0 50px rgba(0,0,0,0.8)', position: 'relative', margin: '0 auto', cursor: 'grab' }} onMouseDown={(e) => { const startX = e.clientX; const startY = e.clientY; const startRot = {...compassRotation}; const onMove = (me) => setCompassRotation({x: startRot.x + (me.clientY-startY)*0.5, y: startRot.y + (me.clientX-startX)*0.5}); const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }; document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp); }}>
+              <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', background: '#2a2a2a', border: '2px solid #444', transform: `rotateX(${compassRotation.x}deg) rotateY(${compassRotation.y}deg)`, transition: 'transform 0.1s' }}>
+                <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#dc143c' }}>N</div>
+                <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#666' }}>S</div>
+                <div style={{ position: 'absolute', top: '50%', left: 10, transform: 'translateY(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#666' }}>W</div>
+                <div style={{ position: 'absolute', top: '50%', right: 10, transform: 'translateY(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#666' }}>E</div>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', width: 6, height: 100, background: 'linear-gradient(to bottom, #dc143c 50%, #fff 50%)', transform: 'translate(-50%, -50%)', borderRadius: 3 }} />
+              </div>
+              {checkCompassSecret(compassRotation) && !compassSecretFound && (<div style={{ position: 'absolute', bottom: -60, left: '50%', transform: 'translateX(-50%)', background: '#fbbf24', padding: '10px 20px', borderRadius: 4, animation: 'pulse 1s infinite' }}><p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 12, color: '#000', margin: 0 }}>🔓 MAINTENEZ... {Math.floor((3000-compassHoldTime)/1000)+1}s</p></div>)}
+            </div>
+            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginTop: 30 }}>Orientation: <span style={{color:'#dc143c'}}>{Math.round(((compassRotation.y%360)+360)%360)}°</span></p>
+            {compassSecretFound && <p style={{ color: '#22c55e', marginTop: 10 }}>✅ Code: CRYPTE7</p>}
+          </div>
+        </div>
+      )}
+
+      {/* PHOTO 1892 */}
+      {showPhoto1892 && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1600, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowPhoto1892(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+            <h2 style={{ fontFamily: 'Cinzel, serif', color: '#fff', marginBottom: 10 }}>PHOTO 1892</h2>
+            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginBottom: 20 }}>{faceRevealed ? '✅ EZEKIEL LEWIS révélé' : 'Frottez pour révéler le visage gratté'}</p>
+            <div style={{ width: 400, height: 300, background: '#8b7355', border: '10px solid #333', position: 'relative', cursor: faceRevealed ? 'default' : 'crosshair', margin: '0 auto' }} onMouseMove={handleScratch}>
+              <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', justifyContent: 'center', height: '100%', paddingBottom: 50 }}>
+                <div style={{ width: 50, height: 100, background: '#444', borderRadius: '25px 25px 0 0' }} />
+                <div style={{ width: 50, height: 110, background: '#444', borderRadius: '25px 25px 0 0' }} />
+                <div style={{ width: 50, height: 120, background: faceRevealed ? '#333' : `linear-gradient(#222 ${scratchProgress}%, #888 ${scratchProgress}%)`, borderRadius: '25px 25px 0 0', position: 'relative' }}>{faceRevealed && <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', fontSize: 20 }}>👤</div>}{!faceRevealed && <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', fontSize: 8, color: '#dc143c' }}>GRATTÉ</div>}</div>
+                <div style={{ width: 50, height: 105, background: '#444', borderRadius: '25px 25px 0 0' }} />
+              </div>
+              {!faceRevealed && <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, height: 4, background: '#333' }}><div style={{ width: `${scratchProgress}%`, height: '100%', background: '#dc143c' }} /></div>}
+            </div>
+            {faceRevealed && <p style={{ color: '#22c55e', marginTop: 20, fontFamily: 'Share Tech Mono, monospace' }}>➡️ Tapez EZEKIEL dans le terminal</p>}
+          </div>
+        </div>
+      )}
+
+      {/* AUDIO PLAYER */}
+      {showAudioPlayer && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1600, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowAudioPlayer(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ textAlign: 'center', maxWidth: 450 }}>
+            <h2 style={{ fontFamily: 'Cinzel, serif', color: '#fff', marginBottom: 10 }}>ENREGISTREMENT ELEANOR</h2>
+            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginBottom: 20 }}>7 août 1996, 02:13 AM</p>
+            <div style={{ background: '#1a1a1a', border: '2px solid #333', borderRadius: 8, padding: 20 }}>
+              <button onClick={() => { setAudioPlayed(true); addClue('AUDIO_PLAYED'); showGameNotification('🎧 Tapez TUNNELS dans le terminal', 'unlock'); }} style={{ width: 60, height: 60, borderRadius: '50%', background: audioPlayed ? '#22c55e' : '#dc143c', border: 'none', cursor: 'pointer', fontSize: 24, color: '#fff', marginBottom: 15 }}>{audioPlayed ? '✓' : '▶'}</button>
+              <div style={{ background: '#0a0a0a', padding: 15, borderRadius: 4, textAlign: 'left' }}>
+                <p style={{ fontFamily: 'Crimson Text, serif', fontSize: 13, color: '#999', lineHeight: 1.7, fontStyle: 'italic' }}>"Il est 2h13... Le registre de 1892... Ezekiel Lewis n'a pas disparu. Il a été transformé. Les trois familles ont fait un pacte en 1847. L'entrée des tunnels est sous l'église. La septième crypte. Si vous écoutez ceci, c'est que je suis—"</p>
+              </div>
+            </div>
+            {audioPlayed && <p style={{ color: '#22c55e', marginTop: 15, fontFamily: 'Share Tech Mono, monospace', fontSize: 12 }}>➡️ Tapez TUNNELS dans le terminal</p>}
+          </div>
+        </div>
+      )}
+
+      {/* TUNNELS */}
+      {showTunnels && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1600, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center', maxWidth: 600, padding: 20 }}>
+            <h2 style={{ fontFamily: 'Cinzel, serif', color: '#dc143c', marginBottom: 10, textShadow: '0 0 20px rgba(220,20,60,0.5)' }}>LES TUNNELS</h2>
+            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginBottom: 20 }}>Profondeur: {tunnelPosition * 5}m</p>
+            <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: 8, padding: 30, minHeight: 200, marginBottom: 20 }}>
+              {tunnelPosition === 0 ? (<p style={{ fontFamily: 'Crimson Text, serif', fontSize: 16, color: '#888' }}>Vous êtes devant l'entrée des tunnels.<br/>L'obscurité est totale.<br/><span style={{color:'#dc143c'}}>Entrer?</span></p>) : (<div>{tunnelMessages.map((msg, i) => (<p key={i} style={{ fontFamily: 'Crimson Text, serif', fontSize: 14, color: i === tunnelMessages.length - 1 ? '#fff' : '#666', marginBottom: 8 }}>{msg}</p>))}</div>)}
+            </div>
+            <div style={{ display: 'flex', gap: 15, justifyContent: 'center' }}>
+              <button onClick={() => exploreTunnel('back')} disabled={tunnelPosition===0} style={{ padding: '12px 25px', fontFamily: 'Share Tech Mono, monospace', background: tunnelPosition===0 ? '#1a1a1a' : '#333', color: tunnelPosition===0 ? '#444' : '#fff', border: '1px solid #444', cursor: tunnelPosition===0 ? 'not-allowed' : 'pointer', borderRadius: 4 }}>← RECULER</button>
+              <button onClick={() => exploreTunnel('forward')} disabled={tunnelPosition>=9} style={{ padding: '12px 25px', fontFamily: 'Share Tech Mono, monospace', background: tunnelPosition>=9 ? '#1a1a1a' : '#dc143c', color: tunnelPosition>=9 ? '#444' : '#fff', border: 'none', cursor: tunnelPosition>=9 ? 'not-allowed' : 'pointer', borderRadius: 4 }}>AVANCER →</button>
+              <button onClick={() => { setShowTunnels(false); setTunnelPosition(0); setTunnelMessages([]); }} style={{ padding: '12px 25px', fontFamily: 'Share Tech Mono, monospace', background: '#333', color: '#fff', border: '1px solid #444', cursor: 'pointer', borderRadius: 4 }}>SORTIR</button>
+            </div>
+            <div style={{ marginTop: 20, display: 'flex', gap: 5, justifyContent: 'center' }}>{[...Array(10)].map((_, i) => (<div key={i} style={{ width: 20, height: 4, background: i <= tunnelPosition ? '#dc143c' : '#333', borderRadius: 2 }} />))}</div>
           </div>
         </div>
       )}
