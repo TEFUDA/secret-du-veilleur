@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOSSIER #7 — Les Sept de Ravenwood | MIND GAMES</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      color: #d4d4d4;
+      font-family: 'Crimson Text', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #7f1d1d, #450a0a);
+      color: #dc143c;
+      padding: 8px 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      margin-bottom: 30px;
+      border: 1px solid #dc143c;
+    }
+    .title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(32px, 8vw, 48px);
+      color: #fff;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: #dc143c;
+      letter-spacing: 0.2em;
+      margin-bottom: 40px;
+    }
+    .description {
+      font-size: 16px;
+      color: #888;
+      line-height: 1.8;
+      margin-bottom: 40px;
+    }
+    .file-box {
+      background: linear-gradient(135deg, rgba(220,20,60,0.1), rgba(139,0,0,0.1));
+      border: 2px solid rgba(220,20,60,0.3);
+      border-radius: 8px;
+      padding: 40px;
+      margin-bottom: 30px;
+    }
+    .file-icon {
+      font-size: 60px;
+      margin-bottom: 20px;
+    }
+    .file-name {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+    .file-size {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 25px;
+    }
+    .download-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #dc143c, #8b0000);
+      color: #fff;
+      padding: 15px 50px;
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.3s;
+      box-shadow: 0 5px 20px rgba(220,20,60,0.4);
+    }
+    .download-btn:hover {
+      background: linear-gradient(135deg, #ff2d55, #dc143c);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(220,20,60,0.5);
+    }
+    .warning {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #666;
+      margin-top: 30px;
+      padding: 15px;
+      border: 1px solid #333;
+      border-radius: 4px;
+    }
+    .contents {
+      text-align: left;
+      margin-top: 40px;
+      padding: 20px;
+      background: #111;
+      border-radius: 4px;
+    }
+    .contents h3 {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 15px;
+      letter-spacing: 0.1em;
+    }
+    .contents ul {
+      list-style: none;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: #888;
+    }
+    .contents li {
+      padding: 5px 0;
+      border-bottom: 1px solid #222;
+    }
+    .contents li:last-child {
+      border-bottom: none;
+    }
+    .footer {
+      margin-top: 50px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">📁 DOCUMENT CLASSIFIÉ</div>
+    
+    <h1 class="title">DOSSIER #7</h1>
+    <h2 class="subtitle">LES SEPT DE RAVENWOOD</h2>
+    
+    <p class="description">
+      Sept victimes. 178 ans de disparitions.<br>
+      Ce dossier contient tout ce que nous savons sur les personnes<br>
+      qui ont croisé le chemin du Veilleur.
+    </p>
+    
+    <div class="file-box">
+      <div class="file-icon">📄</div>
+      <div class="file-name">DOSSIER_7_LES_SEPT_DE_RAVENWOOD.pdf</div>
+      <div class="file-size">Document PDF — 11 pages</div>
+      <a href="/DOSSIER_7_LES_SEPT_DE_RAVENWOOD.pdf" download class="download-btn">
+        ⬇️ TÉLÉCHARGER LE DOSSIER
+      </a>
+    </div>
+    
+    <div class="contents">
+      <h3>CONTENU DU DOSSIER :</h3>
+      <ul>
+        <li>📋 Fiche victime #1 — Sarah Mitchell (1867)</li>
+        <li>📋 Fiche victime #2 — Famille Ashworth (1892)</li>
+        <li>📋 Fiche victime #3 — Margaret Holloway (1892)</li>
+        <li>📋 Fiche victime #4 — Eleanor Price (1996)</li>
+        <li>📋 Fiche victime #5 — Victor Bertrand (2016)</li>
+        <li>📋 Fiche victime #6 — Thomas Crane (1952)</li>
+        <li>📋 Fiche victime #7 — Madeleine Bertrand (2026)</li>
+        <li>📊 Chronologie complète des disparitions</li>
+        <li>🔮 Annonce exclusive — MIND GAMES</li>
+      </ul>
+    </div>
+    
+    <div class="warning">
+      ⚠️ AVERTISSEMENT : Ce document contient des informations sensibles.<br>
+      Certains passages ont été censurés pour votre protection.<br>
+      💡 INDICE : La page 5 contient un nom important pour l'enquête.
+    </div>
+    
+    <div class="footer">
+      🕷️ Le Veilleur observe.<br>
+      secret-du-veilleur.fr
+    </div>
+  </div>
+</body>
+</html>

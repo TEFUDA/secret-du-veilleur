@@ -74,7 +74,7 @@ export default function App() {
   const [unlockedFeatures, setUnlockedFeatures] = useState(new Set());
   const [foundClues, setFoundClues] = useState([]);
   const [compassUnlocked, setCompassUnlocked] = useState(false);
-  const [compassRotation, setCompassRotation] = useState({ x: 0, y: 0 });
+  const [compassRotation, setCompassRotation] = useState(0); // Simple angle en degrés
   const [compassHoldTime, setCompassHoldTime] = useState(0);
   const [compassSecretFound, setCompassSecretFound] = useState(false);
   const [photoUnlocked, setPhotoUnlocked] = useState(false);
@@ -93,6 +93,8 @@ export default function App() {
   const [showTunnels, setShowTunnels] = useState(false);
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
   const [escapeGameNotification, setEscapeGameNotification] = useState(null);
+  const [chapter0Unlocked, setChapter0Unlocked] = useState(false);
+  const [showChapter0Modal, setShowChapter0Modal] = useState(false);
   const compassHoldRef = useRef(null);
   
   // AUDIO REFS
@@ -396,7 +398,7 @@ export default function App() {
   // Vérifier orientation boussole pour secret
   const checkCompassSecret = useCallback((rotation) => {
     // Sud-Ouest = vers les tunnels (entre 200 et 230 degrés)
-    const angle = ((rotation.y % 360) + 360) % 360;
+    const angle = ((rotation % 360) + 360) % 360;
     if (angle >= 200 && angle <= 230) {
       return true;
     }
@@ -1027,15 +1029,30 @@ export default function App() {
     // SYSTÈME ESCAPE GAME — DÉBLOCAGES
     // ════════════════════════════════════════════════════════════════════════
     
-    // CODE 1847 — Débloque la BOUSSOLE
+    // CODE 1847 — Info sur la boussole (débloquée via le puzzle)
     if (cmd === '1847') {
-      if (!compassUnlocked) {
-        setCompassUnlocked(true);
-        unlockFeature('COMPASS');
-        addClue('CODE_1847');
-        setTimeout(() => {
-          showGameNotification('🧭 BOUSSOLE DÉBLOQUÉE ! Cliquez sur l\'icône boussole pour l\'ouvrir.', 'unlock');
-        }, 2000);
+      if (compassUnlocked) {
+        response = [
+          '✅ CODE 1847 — DÉJÀ ACTIVÉ',
+          '═══════════════════════════════════════',
+          'La boussole est déjà débloquée !',
+          '',
+          '➡️ Clique sur 🧭 à droite pour l\'utiliser.',
+          '═══════════════════════════════════════',
+        ];
+      } else {
+        response = [
+          '🔢 CODE 1847 RECONNU',
+          '═══════════════════════════════════════',
+          'C\'est bien l\'année du pacte...',
+          '',
+          'Mais pour débloquer la boussole,',
+          'tu dois d\'abord résoudre l\'énigme',
+          'dans la section "PREMIÈRE ÉNIGME" ci-dessus.',
+          '',
+          '➡️ Remonte et entre 1847 dans le champ de réponse.',
+          '═══════════════════════════════════════',
+        ];
       }
     }
     
@@ -1108,43 +1125,76 @@ export default function App() {
       }
     }
     
-    // CODE TUNNELS — Débloque l'exploration
+    // CODE TUNNELS — Débloque l'exploration via HOLLOWAY
     if (cmd === 'tunnels' || cmd === 'explorer tunnels' || cmd === 'entrer tunnels') {
-      if (audioPlayed && !tunnelsUnlocked) {
-        setTunnelsUnlocked(true);
-        unlockFeature('TUNNELS');
-        addClue('TUNNELS_UNLOCKED');
+      if (tunnelsUnlocked) {
         response = [
-          '🔓 ACCÈS AUX TUNNELS AUTORISÉ',
-          '═══════════════════════════════════════',
-          '⚠️ AVERTISSEMENT: ZONE DANGEREUSE',
+          '✅ TUNNELS DÉJÀ ACCESSIBLES',
           '',
-          'Les tunnels sous Ravenwood s\'étendent',
-          'sur plus de 12km. 23 personnes y ont disparu.',
-          '',
-          'Êtes-vous sûr de vouloir entrer?',
-          '',
-          '➡️ Cliquez sur l\'icône TUNNELS pour explorer.',
-          '   À vos risques et périls...',
-          '═══════════════════════════════════════',
+          '➡️ Clique sur 🚇 à droite pour explorer.',
         ];
-        setTimeout(() => {
-          showGameNotification('🚇 TUNNELS DÉBLOQUÉS ! Explorez... si vous l\'osez.', 'unlock');
-        }, 2000);
-      } else if (!audioPlayed) {
-        response = terminalCommands['tunnels'] ? terminalCommands['tunnels']() : [
-          '⛔ ACCÈS REFUSÉ',
-          'Vous devez d\'abord découvrir comment y entrer.',
+      } else {
+        response = [
+          '⛔ ACCÈS AUX TUNNELS REFUSÉ',
+          '═══════════════════════════════════════',
+          'Vous devez d\'abord trouver l\'entrée secrète.',
           '',
-          '💡 Eleanor Price connaissait le chemin...',
+          '💡 Indice: Eleanor Price a laissé un indice',
+          '   dans son enregistrement audio...',
+          '   Regarde dans le DOSSIER #7.',
+          '═══════════════════════════════════════',
         ];
       }
     }
     
-    // CODE FINAL — VERITASNEX
+    // CODE HOLLOWAY — Débloque les TUNNELS (depuis le Dossier #7)
+    if (cmd === 'holloway' || cmd === 'margaret holloway' || cmd === 'margaret') {
+      if (audioPlayed && !tunnelsUnlocked) {
+        setTunnelsUnlocked(true);
+        unlockFeature('TUNNELS');
+        addClue('CODE_HOLLOWAY');
+        response = [
+          '🔓 CODE HOLLOWAY ACCEPTÉ',
+          '═══════════════════════════════════════',
+          'Margaret Holloway... La sage-femme de 1892.',
+          '',
+          'Elle connaissait l\'entrée des tunnels.',
+          'Elle y est descendue cette nuit-là.',
+          'Elle n\'en est jamais remontée.',
+          '',
+          'Tu as trouvé l\'entrée secrète.',
+          '',
+          '➡️ Clique sur 🚇 pour explorer les tunnels.',
+          '   À tes risques et périls...',
+          '═══════════════════════════════════════',
+        ];
+        setTimeout(() => {
+          showGameNotification('🚇 TUNNELS DÉBLOQUÉS ! L\'entrée secrète est ouverte...', 'unlock');
+        }, 2000);
+      } else if (!audioPlayed) {
+        response = [
+          'RECHERCHE: "HOLLOWAY"',
+          '─────────────────────',
+          'Margaret Holloway — Sage-femme',
+          'Disparue en 1892',
+          '',
+          '💡 Écoute d\'abord l\'audio d\'Eleanor...',
+          '   Elle explique le lien.',
+        ];
+      } else {
+        response = [
+          '✅ TUNNELS DÉJÀ ACCESSIBLES',
+          '',
+          '➡️ Clique sur 🚇 à droite pour explorer.',
+        ];
+      }
+    }
+    
+    // CODE FINAL — VERITASNEX → Débloque le CHAPITRE 0
     if (cmd === 'veritasnex') {
       if (unlockedFeatures.has('FINAL_CODE')) {
         setEliteStatus(true);
+        setChapter0Unlocked(true);
         setGameLevel(5);
         addClue('FINAL_CODE_ENTERED');
         response = [
@@ -1157,22 +1207,26 @@ export default function App() {
           'Tu as découvert les secrets.',
           'Tu as survécu aux tunnels.',
           '',
-          'Le Veilleur te reconnaît.',
-          '',
           '════════ STATUT: ENQUÊTEUR ÉLITE ════════',
           '',
-          'Tu fais maintenant partie de ceux qui SAVENT.',
+          '🎁 RÉCOMPENSE DÉBLOQUÉE:',
+          'CHAPITRE 0 — LA NUIT DU PACTE',
           '',
-          'La vérité complète t\'attend dans le livre.',
-          'Mind Games — Tome 1: La Toile Mortelle',
+          'Un chapitre EXCLUSIF qui n\'existe pas',
+          'dans le livre. La scène de 1847.',
+          'Ce qui s\'est vraiment passé cette nuit-là.',
           '',
           '🕷️ Le Veilleur t\'observera toujours. 🕷️',
           '═══════════════════════════════════════',
         ];
         setTimeout(() => {
-          showGameNotification('🏆 FÉLICITATIONS ! Tu es maintenant un ENQUÊTEUR ÉLITE !', 'elite');
+          showGameNotification('🏆 CHAPITRE 0 DÉBLOQUÉ ! Ta récompense exclusive t\'attend...', 'elite');
           setShowJumpscare(true);
-          setTimeout(() => setShowJumpscare(false), 300);
+          setTimeout(() => {
+            setShowJumpscare(false);
+            // Afficher la modal de récompense après le jumpscare
+            setTimeout(() => setShowChapter0Modal(true), 500);
+          }, 300);
         }, 3000);
       } else {
         response = [
@@ -1237,9 +1291,14 @@ export default function App() {
   };
 
   const checkPuzzle = () => {
-    if (puzzleAnswer.toLowerCase() === 'ashworth' || puzzleAnswer === '1847') {
+    if (puzzleAnswer === '1847') {
       setPuzzleSolved(true);
       setSecretsFound(prev => [...prev, 'PUZZLE']);
+      // DÉCLENCHER LE DÉBLOCAGE DE LA BOUSSOLE
+      setCompassUnlocked(true);
+      unlockFeature('COMPASS');
+      addClue('PUZZLE_1847');
+      showGameNotification('🧭 BOUSSOLE DÉBLOQUÉE ! Clique sur 🧭 à droite.', 'unlock');
     }
   };
 
@@ -1595,27 +1654,220 @@ export default function App() {
         <button onClick={() => photoUnlocked && setShowPhoto1892(true)} disabled={!photoUnlocked} style={{ width: 50, height: 50, borderRadius: 8, border: photoUnlocked ? '2px solid #059669' : '2px solid #333', background: photoUnlocked ? 'linear-gradient(135deg, #064e3b, #022c22)' : '#1a1a1a', cursor: photoUnlocked ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: photoUnlocked ? 1 : 0.4 }} title={photoUnlocked ? 'Photo 1892' : '🔒 Boussole'}>📷</button>
         <button onClick={() => audioClueUnlocked && setShowAudioPlayer(true)} disabled={!audioClueUnlocked} style={{ width: 50, height: 50, borderRadius: 8, border: audioClueUnlocked ? '2px solid #059669' : '2px solid #333', background: audioClueUnlocked ? 'linear-gradient(135deg, #064e3b, #022c22)' : '#1a1a1a', cursor: audioClueUnlocked ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: audioClueUnlocked ? 1 : 0.4 }} title={audioClueUnlocked ? 'Audio' : '🔒 Photo'}>🎧</button>
         <button onClick={() => tunnelsUnlocked && setShowTunnels(true)} disabled={!tunnelsUnlocked} style={{ width: 50, height: 50, borderRadius: 8, border: tunnelsUnlocked ? '2px solid #dc2626' : '2px solid #333', background: tunnelsUnlocked ? 'linear-gradient(135deg, #7f1d1d, #450a0a)' : '#1a1a1a', cursor: tunnelsUnlocked ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: tunnelsUnlocked ? 1 : 0.4 }} title={tunnelsUnlocked ? 'Tunnels' : '🔒 Audio'}>🚇</button>
-        {eliteStatus && (<div style={{ width: 50, height: 50, borderRadius: 8, border: '2px solid #ffd700', background: 'linear-gradient(135deg, #78350f, #451a03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, animation: 'pulse 2s infinite' }} title="🏆 ÉLITE">🏆</div>)}
+        {eliteStatus && (
+          <button 
+            onClick={() => setShowChapter0Modal(true)}
+            style={{ width: 50, height: 50, borderRadius: 8, border: '2px solid #ffd700', background: 'linear-gradient(135deg, #78350f, #451a03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, animation: 'pulse 2s infinite', cursor: 'pointer' }} 
+            title="🏆 CHAPITRE 0 — Clique pour lire"
+          >
+            📖
+          </button>
+        )}
       </div>
 
-      {/* BOUSSOLE 3D */}
+      {/* BOUSSOLE 2D - Rotation à plat */}
       {showCompass && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1600, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }} onClick={() => setShowCompass(false)}>
           <div onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
             <h2 style={{ fontFamily: 'Cinzel, serif', color: '#fff', marginBottom: 10 }}>BOUSSOLE ANCIENNE</h2>
-            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginBottom: 30 }}>Faites glisser • Certaines directions cachent des secrets (200°-230°)</p>
-            <div style={{ width: 300, height: 300, borderRadius: '50%', background: 'linear-gradient(135deg, #1a1a1a, #0a0a0a)', border: '8px solid #333', boxShadow: '0 0 50px rgba(0,0,0,0.8)', position: 'relative', margin: '0 auto', cursor: 'grab' }} onMouseDown={(e) => { const startX = e.clientX; const startY = e.clientY; const startRot = {...compassRotation}; const onMove = (me) => setCompassRotation({x: startRot.x + (me.clientY-startY)*0.5, y: startRot.y + (me.clientX-startX)*0.5}); const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }; document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp); }}>
-              <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', background: '#2a2a2a', border: '2px solid #444', transform: `rotateX(${compassRotation.x}deg) rotateY(${compassRotation.y}deg)`, transition: 'transform 0.1s' }}>
-                <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#dc143c' }}>N</div>
-                <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#666' }}>S</div>
-                <div style={{ position: 'absolute', top: '50%', left: 10, transform: 'translateY(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#666' }}>W</div>
-                <div style={{ position: 'absolute', top: '50%', right: 10, transform: 'translateY(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#666' }}>E</div>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', width: 6, height: 100, background: 'linear-gradient(to bottom, #dc143c 50%, #fff 50%)', transform: 'translate(-50%, -50%)', borderRadius: 3 }} />
+            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginBottom: 30 }}>Faites glisser en cercle pour tourner • Secret entre 200° et 230°</p>
+            
+            {/* Conteneur boussole */}
+            <div 
+              style={{ 
+                width: 300, 
+                height: 300, 
+                borderRadius: '50%', 
+                background: 'radial-gradient(circle, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)', 
+                border: '8px solid #444', 
+                boxShadow: '0 0 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.5), 0 0 20px rgba(220,20,60,0.2)', 
+                position: 'relative', 
+                margin: '0 auto', 
+                cursor: 'grab',
+                userSelect: 'none'
+              }} 
+              onMouseDown={(e) => {
+                e.preventDefault();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180 / Math.PI;
+                const startRotation = compassRotation;
+                
+                const onMove = (me) => {
+                  const currentAngle = Math.atan2(me.clientY - centerY, me.clientX - centerX) * 180 / Math.PI;
+                  const deltaAngle = currentAngle - startAngle;
+                  setCompassRotation(startRotation + deltaAngle);
+                };
+                
+                const onUp = () => {
+                  document.removeEventListener('mousemove', onMove);
+                  document.removeEventListener('mouseup', onUp);
+                };
+                
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+              }}
+              onTouchStart={(e) => {
+                const touch = e.touches[0];
+                const rect = e.currentTarget.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const startAngle = Math.atan2(touch.clientY - centerY, touch.clientX - centerX) * 180 / Math.PI;
+                const startRotation = compassRotation;
+                
+                const onMove = (me) => {
+                  const moveTouch = me.touches[0];
+                  const currentAngle = Math.atan2(moveTouch.clientY - centerY, moveTouch.clientX - centerX) * 180 / Math.PI;
+                  const deltaAngle = currentAngle - startAngle;
+                  setCompassRotation(startRotation + deltaAngle);
+                };
+                
+                const onEnd = () => {
+                  document.removeEventListener('touchmove', onMove);
+                  document.removeEventListener('touchend', onEnd);
+                };
+                
+                document.addEventListener('touchmove', onMove);
+                document.addEventListener('touchend', onEnd);
+              }}
+            >
+              {/* Cadran qui tourne */}
+              <div style={{ 
+                position: 'absolute', 
+                inset: 15, 
+                borderRadius: '50%', 
+                background: 'linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%)', 
+                border: '3px solid #555',
+                transform: `rotate(${compassRotation}deg)`,
+                transition: 'transform 0.05s ease-out'
+              }}>
+                {/* Points cardinaux */}
+                <div style={{ position: 'absolute', top: 15, left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', fontSize: 24, color: '#dc143c', fontWeight: 'bold', textShadow: '0 0 10px rgba(220,20,60,0.5)' }}>N</div>
+                <div style={{ position: 'absolute', bottom: 15, left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#888' }}>S</div>
+                <div style={{ position: 'absolute', top: '50%', left: 15, transform: 'translateY(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#888' }}>W</div>
+                <div style={{ position: 'absolute', top: '50%', right: 15, transform: 'translateY(-50%)', fontFamily: 'Cinzel, serif', fontSize: 20, color: '#888' }}>E</div>
+                
+                {/* Graduations */}
+                {[...Array(36)].map((_, i) => (
+                  <div key={i} style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: i % 9 === 0 ? 3 : 1,
+                    height: i % 9 === 0 ? 15 : 8,
+                    background: i % 9 === 0 ? '#666' : '#444',
+                    transformOrigin: '50% 120px',
+                    transform: `translateX(-50%) rotate(${i * 10}deg)`
+                  }} />
+                ))}
               </div>
-              {checkCompassSecret(compassRotation) && !compassSecretFound && (<div style={{ position: 'absolute', bottom: -60, left: '50%', transform: 'translateX(-50%)', background: '#fbbf24', padding: '10px 20px', borderRadius: 4, animation: 'pulse 1s infinite' }}><p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 12, color: '#000', margin: 0 }}>🔓 MAINTENEZ... {Math.floor((3000-compassHoldTime)/1000)+1}s</p></div>)}
+              
+              {/* Aiguille FIXE (ne tourne pas) */}
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: 8,
+                height: 120,
+                transform: 'translate(-50%, -50%)',
+                zIndex: 10,
+                pointerEvents: 'none'
+              }}>
+                {/* Partie rouge (nord) */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 0,
+                  height: 0,
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderBottom: '50px solid #dc143c',
+                  filter: 'drop-shadow(0 0 5px rgba(220,20,60,0.8))'
+                }} />
+                {/* Partie blanche (sud) */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 0,
+                  height: 0,
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderTop: '45px solid #eee'
+                }} />
+              </div>
+              
+              {/* Centre de la boussole */}
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: 24,
+                height: 24,
+                background: 'radial-gradient(circle, #666 0%, #333 100%)',
+                border: '2px solid #888',
+                borderRadius: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 20,
+                boxShadow: '0 2px 5px rgba(0,0,0,0.5)'
+              }} />
+              
+              {/* Indicateur de secret trouvé */}
+              {checkCompassSecret(compassRotation) && !compassSecretFound && (
+                <div style={{ 
+                  position: 'absolute', 
+                  bottom: -70, 
+                  left: '50%', 
+                  transform: 'translateX(-50%)', 
+                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
+                  padding: '12px 24px', 
+                  borderRadius: 8, 
+                  animation: 'pulse 1s infinite',
+                  boxShadow: '0 5px 20px rgba(251,191,36,0.4)'
+                }}>
+                  <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 14, color: '#000', margin: 0, fontWeight: 'bold' }}>
+                    🔓 MAINTENEZ... {Math.floor((3000 - compassHoldTime) / 1000) + 1}s
+                  </p>
+                </div>
+              )}
             </div>
-            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginTop: 30 }}>Orientation: <span style={{color:'#dc143c'}}>{Math.round(((compassRotation.y%360)+360)%360)}°</span></p>
-            {compassSecretFound && <p style={{ color: '#22c55e', marginTop: 10 }}>✅ Code: CRYPTE7</p>}
+            
+            {/* Informations */}
+            <div style={{ marginTop: 40 }}>
+              <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 14 }}>
+                Direction: <span style={{ color: '#dc143c', fontSize: 18, fontWeight: 'bold' }}>{Math.round(((compassRotation % 360) + 360) % 360)}°</span>
+              </p>
+              <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#444', fontSize: 11, marginTop: 10 }}>
+                💡 Le sud-ouest (SW) se trouve entre 200° et 230°
+              </p>
+              {compassSecretFound && (
+                <p style={{ color: '#22c55e', marginTop: 15, fontSize: 16 }}>
+                  ✅ Secret trouvé ! Code: <strong>CRYPTE7</strong>
+                </p>
+              )}
+            </div>
+            
+            {/* Bouton fermer */}
+            <button 
+              onClick={() => setShowCompass(false)}
+              style={{
+                marginTop: 30,
+                padding: '10px 30px',
+                fontFamily: 'Share Tech Mono, monospace',
+                fontSize: 12,
+                background: '#333',
+                color: '#fff',
+                border: '1px solid #555',
+                borderRadius: 4,
+                cursor: 'pointer'
+              }}
+            >
+              FERMER
+            </button>
           </div>
         </div>
       )}
@@ -1640,19 +1892,41 @@ export default function App() {
         </div>
       )}
 
-      {/* AUDIO PLAYER */}
+      {/* AUDIO PLAYER — Avec indice vers le Dossier #7 */}
       {showAudioPlayer && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1600, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowAudioPlayer(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ textAlign: 'center', maxWidth: 450 }}>
+          <div onClick={e => e.stopPropagation()} style={{ textAlign: 'center', maxWidth: 500 }}>
             <h2 style={{ fontFamily: 'Cinzel, serif', color: '#fff', marginBottom: 10 }}>ENREGISTREMENT ELEANOR</h2>
-            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginBottom: 20 }}>7 août 1996, 02:13 AM</p>
-            <div style={{ background: '#1a1a1a', border: '2px solid #333', borderRadius: 8, padding: 20 }}>
-              <button onClick={() => { setAudioPlayed(true); addClue('AUDIO_PLAYED'); showGameNotification('🎧 Tapez TUNNELS dans le terminal', 'unlock'); }} style={{ width: 60, height: 60, borderRadius: '50%', background: audioPlayed ? '#22c55e' : '#dc143c', border: 'none', cursor: 'pointer', fontSize: 24, color: '#fff', marginBottom: 15 }}>{audioPlayed ? '✓' : '▶'}</button>
-              <div style={{ background: '#0a0a0a', padding: 15, borderRadius: 4, textAlign: 'left' }}>
-                <p style={{ fontFamily: 'Crimson Text, serif', fontSize: 13, color: '#999', lineHeight: 1.7, fontStyle: 'italic' }}>"Il est 2h13... Le registre de 1892... Ezekiel Lewis n'a pas disparu. Il a été transformé. Les trois familles ont fait un pacte en 1847. L'entrée des tunnels est sous l'église. La septième crypte. Si vous écoutez ceci, c'est que je suis—"</p>
+            <p style={{ fontFamily: 'Share Tech Mono, monospace', color: '#666', fontSize: 12, marginBottom: 20 }}>7 août 1996, 02:13 AM — Dernier message</p>
+            <div style={{ background: '#1a1a1a', border: '2px solid #333', borderRadius: 8, padding: 25 }}>
+              <button onClick={() => { setAudioPlayed(true); addClue('AUDIO_PLAYED'); showGameNotification('🎧 Audio écouté ! Cherche dans le DOSSIER #7...', 'unlock'); }} style={{ width: 60, height: 60, borderRadius: '50%', background: audioPlayed ? '#22c55e' : '#dc143c', border: 'none', cursor: 'pointer', fontSize: 24, color: '#fff', marginBottom: 15 }}>{audioPlayed ? '✓' : '▶'}</button>
+              <div style={{ background: '#0a0a0a', padding: 20, borderRadius: 4, textAlign: 'left' }}>
+                <p style={{ fontFamily: 'Crimson Text, serif', fontSize: 14, color: '#999', lineHeight: 1.8, fontStyle: 'italic' }}>
+                  "[Respiration haletante]<br/><br/>
+                  Il est 2h13 du matin. Je sais que quelqu'un m'écoute... un jour.<br/><br/>
+                  Le registre de 1892... Ezekiel Lewis n'a pas disparu. Il a été... transformé.<br/><br/>
+                  Les trois familles ont fait un pacte en 1847. Avec quelque chose... dans les tunnels.<br/><br/>
+                  L'entrée... elle est sous l'église. La septième crypte. <span style={{color: '#dc143c'}}>La sage-femme de 1892 connaissait le chemin.</span><br/><br/>
+                  Regarde dans mes archives... <span style={{color: '#ffd700'}}>page 5 du dossier</span>. Son nom est la clé.<br/><br/>
+                  [Craquement]<br/><br/>
+                  Si vous écoutez ceci, c'est que je suis—<br/><br/>
+                  [Fin de l'enregistrement]"
+                </p>
               </div>
             </div>
-            {audioPlayed && <p style={{ color: '#22c55e', marginTop: 15, fontFamily: 'Share Tech Mono, monospace', fontSize: 12 }}>➡️ Tapez TUNNELS dans le terminal</p>}
+            {audioPlayed && (
+              <div style={{ marginTop: 20, background: 'rgba(220,20,60,0.1)', border: '1px solid rgba(220,20,60,0.3)', padding: 15, borderRadius: 4 }}>
+                <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 12, color: '#ffd700', marginBottom: 10 }}>
+                  💡 INDICE IMPORTANT
+                </p>
+                <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 11, color: '#888' }}>
+                  Eleanor mentionne le <strong style={{color:'#fff'}}>DOSSIER #7</strong> envoyé par email.<br/>
+                  Regarde la <strong style={{color:'#fff'}}>page 5</strong> — la sage-femme de 1892.<br/>
+                  <strong style={{color:'#dc143c'}}>Son nom est le prochain code.</strong>
+                </p>
+              </div>
+            )}
+            <button onClick={() => setShowAudioPlayer(false)} style={{ marginTop: 20, padding: '10px 30px', fontFamily: 'Share Tech Mono, monospace', fontSize: 12, background: '#333', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: 4 }}>FERMER</button>
           </div>
         </div>
       )}
@@ -1676,6 +1950,29 @@ export default function App() {
         </div>
       )}
 
+
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {/* MODAL RÉCOMPENSE FINALE — CHAPITRE 0 */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {showChapter0Modal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.98)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, overflow: 'auto' }}>
+          <div style={{ maxWidth: 600, textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, #ffd700, #ff8c00)', padding: '10px 25px', borderRadius: 4, marginBottom: 30 }}>
+              <span style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 12, color: '#000', fontWeight: 'bold', letterSpacing: '0.2em' }}>🏆 ENQUÊTEUR ÉLITE</span>
+            </div>
+            <h1 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(28px, 6vw, 42px)', color: '#fff', marginBottom: 10 }}>FÉLICITATIONS !</h1>
+            <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 12, color: '#666', marginBottom: 40 }}>Tu as terminé toutes les énigmes</p>
+            <div style={{ background: 'linear-gradient(135deg, rgba(220,20,60,0.2), rgba(139,0,0,0.2))', border: '2px solid rgba(220,20,60,0.5)', borderRadius: 8, padding: 40, marginBottom: 30 }}>
+              <div style={{ fontSize: 50, marginBottom: 20 }}>📖</div>
+              <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: 24, color: '#dc143c', marginBottom: 10 }}>CHAPITRE 0</h2>
+              <h3 style={{ fontFamily: 'Cinzel, serif', fontSize: 18, color: '#fff', marginBottom: 20, letterSpacing: '0.2em' }}>LA NUIT DU PACTE</h3>
+              <p style={{ fontFamily: 'Crimson Text, serif', fontSize: 16, color: '#888', lineHeight: 1.8, marginBottom: 25 }}>Un chapitre <strong style={{color:'#ffd700'}}>EXCLUSIF</strong> qui n'existe pas dans le livre.<br/>La scène de 1847. Ce qui s'est vraiment passé.</p>
+              <a href="/chapitre-0.html" target="_blank" style={{ display: 'inline-block', background: 'linear-gradient(135deg, #dc143c, #8b0000)', color: '#fff', padding: '15px 40px', fontFamily: 'Cinzel, serif', fontSize: 14, textDecoration: 'none', borderRadius: 4 }}>📖 LIRE LE CHAPITRE 0</a>
+            </div>
+            <button onClick={() => setShowChapter0Modal(false)} style={{ background: '#333', border: 'none', color: '#fff', padding: '10px 30px', fontFamily: 'Share Tech Mono, monospace', cursor: 'pointer', borderRadius: 4 }}>FERMER</button>
+          </div>
+        </div>
+      )}
       {/* ════════════════════════════════════════════════════════════════════ */}
       {/* VICTIM MODAL */}
       {/* ════════════════════════════════════════════════════════════════════ */}
@@ -2350,24 +2647,48 @@ export default function App() {
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════ */}
-      {/* SECTION: L'ÉNIGME */}
+      {/* SECTION: L'ÉNIGME — POINT D'ENTRÉE SIMPLIFIÉ */}
       {/* ════════════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '100px 20px' }}>
-        <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(20px, 5vw, 32px)', textAlign: 'center', letterSpacing: '0.2em', marginBottom: 10 }}>L'ÉNIGME DU VEILLEUR</h2>
-        <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 11, color: '#666', textAlign: 'center', marginBottom: 50 }}>RÉSOLVEZ POUR DÉBLOQUER UN SECRET</p>
+      <section style={{ padding: '100px 20px', background: 'linear-gradient(to bottom, transparent, rgba(220,20,60,0.02), transparent)' }}>
+        <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(20px, 5vw, 32px)', textAlign: 'center', letterSpacing: '0.2em', marginBottom: 10 }}>🔓 PREMIÈRE ÉNIGME</h2>
+        <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 11, color: '#666', textAlign: 'center', marginBottom: 50 }}>RÉSOUS CETTE ÉNIGME POUR DÉBLOQUER LE JEU</p>
 
         <div style={{ maxWidth: 500, margin: '0 auto', textAlign: 'center' }}>
           {!puzzleSolved ? (
             <>
-              <div style={{ background: '#0a0a0a', border: '1px solid #333', padding: 30, marginBottom: 30 }}>
-                <p style={{ fontFamily: 'Crimson Text, serif', fontSize: 18, color: '#888', lineHeight: 1.8, fontStyle: 'italic', marginBottom: 20 }}>
-                  "Trois ont fondé, trois ont signé.<br/>
-                  L'une a disparu sans laisser de trace.<br/>
-                  Son nom commence comme la cendre,<br/>
-                  Et finit comme la valeur."
+              <div style={{ background: '#0a0a0a', border: '1px solid #333', padding: 30, marginBottom: 30, position: 'relative' }}>
+                {/* Indice visuel subtil */}
+                <div style={{ position: 'absolute', top: 10, right: 10, fontFamily: 'Share Tech Mono, monospace', fontSize: 10, color: '#333' }}>
+                  indice: regarde cette page...
+                </div>
+                
+                <p style={{ fontFamily: 'Crimson Text, serif', fontSize: 20, color: '#888', lineHeight: 1.8, marginBottom: 25 }}>
+                  "En quelle année le Veilleur<br/>
+                  a-t-il commencé à observer Ravenwood ?"
                 </p>
+                
+                <div style={{ display: 'flex', gap: 5, justifyContent: 'center', marginBottom: 20 }}>
+                  {['1', '8', '4', '7'].map((digit, i) => (
+                    <div key={i} style={{ 
+                      width: 50, 
+                      height: 60, 
+                      background: '#111', 
+                      border: '2px solid #333',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontFamily: 'Share Tech Mono, monospace',
+                      fontSize: 28,
+                      color: '#dc143c',
+                      opacity: 0.3
+                    }}>
+                      ?
+                    </div>
+                  ))}
+                </div>
+                
                 <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 11, color: '#dc143c' }}>
-                  — Note trouvée dans le bureau de Victor Bertrand
+                  💡 La réponse est visible sur cette page. Cherche bien.
                 </p>
               </div>
               
@@ -2376,27 +2697,26 @@ export default function App() {
                   type="text"
                   value={puzzleAnswer}
                   onChange={(e) => setPuzzleAnswer(e.target.value)}
-                  placeholder="Votre réponse..."
-                  style={{ flex: 1, padding: 14, fontFamily: 'Share Tech Mono, monospace', fontSize: 14, background: '#0a0a0a', color: '#fff', border: '1px solid #333', outline: 'none' }}
+                  placeholder="Tape l'année..."
+                  maxLength={4}
+                  style={{ flex: 1, padding: 14, fontFamily: 'Share Tech Mono, monospace', fontSize: 18, background: '#0a0a0a', color: '#fff', border: '1px solid #333', outline: 'none', textAlign: 'center', letterSpacing: '0.3em' }}
+                  onKeyPress={(e) => e.key === 'Enter' && checkPuzzle()}
                 />
                 <button onClick={checkPuzzle} style={{ padding: '14px 24px', fontFamily: 'Cinzel, serif', fontSize: 12, background: '#7f1d1d', color: '#fff', border: 'none', cursor: 'pointer', letterSpacing: '0.1em' }}>
                   VALIDER
                 </button>
               </div>
-              <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 10, color: '#444', marginTop: 15 }}>
-                Indice: Relisez l'histoire des trois familles...
-              </p>
             </>
           ) : (
-            <div style={{ background: 'rgba(127,29,29,0.1)', border: '1px solid rgba(127,29,29,0.5)', padding: 30 }}>
-              <div style={{ fontSize: 40, marginBottom: 15 }}>🕷️</div>
-              <p style={{ fontFamily: 'Cinzel, serif', fontSize: 18, color: '#dc143c', marginBottom: 15 }}>ÉNIGME RÉSOLUE</p>
-              <p style={{ fontFamily: 'Crimson Text, serif', fontSize: 14, color: '#888', lineHeight: 1.7 }}>
-                "Les Ashworth... Ils ont été les premiers à comprendre. Et les premiers à payer le prix.
-                Le pacte de 1847 ne peut être brisé. Pas sans conséquences."
+            <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.5)', padding: 30 }}>
+              <div style={{ fontSize: 40, marginBottom: 15 }}>🧭</div>
+              <p style={{ fontFamily: 'Cinzel, serif', fontSize: 18, color: '#22c55e', marginBottom: 15 }}>ÉNIGME RÉSOLUE — 1847</p>
+              <p style={{ fontFamily: 'Crimson Text, serif', fontSize: 14, color: '#888', lineHeight: 1.7, marginBottom: 20 }}>
+                "L'année où tout a commencé. L'année du pacte.<br/>
+                Tu viens de débloquer la <strong>BOUSSOLE</strong> dans la barre d'outils."
               </p>
-              <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 11, color: '#666', marginTop: 20 }}>
-                Secret #{secretsFound.length}/3 débloqué
+              <p style={{ fontFamily: 'Share Tech Mono, monospace', fontSize: 12, color: '#22c55e' }}>
+                ➡️ Clique sur 🧭 à droite pour continuer l'aventure !
               </p>
             </div>
           )}
